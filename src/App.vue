@@ -61,7 +61,9 @@ import { onMounted, onUnmounted, ref, watch, onErrorCaptured } from "vue"
 import { useAttendanceStore } from "./stores/attendance"
 import Toast from "./components/Toast.vue"
 import { loadCachedHolidays, refreshHolidayData } from "./utils/holidays"
+import { createLogger } from "./utils/logger"
 
+const log = createLogger('app-root')
 const attendanceStore = useAttendanceStore()
 const autoCheckTimer = ref(null)
 const globalError = ref(null)
@@ -70,7 +72,7 @@ const AUTO_CHECK_INTERVAL = 60000  // 60 秒
 
 // 错误边界：捕获子组件异常，防止白屏
 onErrorCaptured((err, instance, info) => {
-  console.error('[error-boundary]', err)
+  log.error('[error-boundary]', err)
   globalError.value = {
     message: err?.message || '未知错误',
     info: info || '',

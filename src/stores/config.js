@@ -10,6 +10,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getStorage, setStorage } from '../utils/storageUtils'
 import { DEFAULT_CONFIG, STORAGE_KEYS } from '../utils/constants.js'
+import { createLogger } from '../utils/logger'
+
+const log = createLogger('config-store')
 
 export const useConfigStore = defineStore('config', () => {
   // ==================== 配置 ref ====================
@@ -108,7 +111,7 @@ export const useConfigStore = defineStore('config', () => {
         if (c.key === 'autoStartup' && window.electronAPI) {
           autoStartupResult = await window.electronAPI.autoStartup.set(value)
           if (autoStartupResult && !autoStartupResult.success) {
-            console.warn('[config store] Auto-startup set failed:', autoStartupResult.error)
+            log.warn('[config store] Auto-startup set failed:', autoStartupResult.error)
           }
         }
       }

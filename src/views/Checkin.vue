@@ -152,7 +152,9 @@ import { timeToMinutes, getTodayString } from "../utils/dateUtils"
 import { useKeyboard } from "../composables/useKeyboard"
 import { useToast } from "../composables/useToast"
 import { useRouter } from "vue-router"
+import { createLogger } from "../utils/logger"
 
+const log = createLogger('checkin-view')
 const attendanceStore = useAttendanceStore()
 const toast = useToast()
 const router = useRouter()
@@ -210,7 +212,7 @@ async function handleCheck(isAuto = false, fromShutdown = false) {
   isClicking = true
   try {
     const result = await attendanceStore.handleCheck()
-    if (result.success === false) { console.warn("打卡失败:", result.message); return }
+    if (result.success === false) { log.warn("打卡失败:", result.message); return }
     checkSuccess.value = true
     updateTrayStatus()
     if ((isAuto || fromShutdown) && window.electronAPI && window.electronAPI.notification) {

@@ -3,7 +3,10 @@
  */
 import { STORAGE_KEYS } from './constants.js'
 import { mergeRecords } from './recordUtils'
+import { createLogger } from './logger'
 import type { AttendanceRecord } from '../types/core'
+
+const log = createLogger('storage')
 
 // ══════════════════════════════════
 // 内存缓存
@@ -38,7 +41,7 @@ export async function getStorage<T = unknown>(key: string, defaultValue: T): Pro
     }
     return value as T
   } catch (e) {
-    console.error(`[storage] get failed [${key}]:`, e)
+    log.error(`[storage] get failed [${key}]:`, e)
     return defaultValue
   }
 }
@@ -57,7 +60,7 @@ export async function setStorage(key: string, value: unknown): Promise<boolean> 
     }
     return success
   } catch (e) {
-    console.error(`[storage] set failed [${key}]:`, e)
+    log.error(`[storage] set failed [${key}]:`, e)
     return false
   }
 }
@@ -76,7 +79,7 @@ export async function removeStorage(key: string): Promise<boolean> {
     }
     return success
   } catch (e) {
-    console.error(`[storage] remove failed [${key}]:`, e)
+    log.error(`[storage] remove failed [${key}]:`, e)
     return false
   }
 }
@@ -100,7 +103,7 @@ export async function getAttendanceRecords(): Promise<AttendanceRecord[]> {
 
 export async function saveAttendanceRecords(records: AttendanceRecord[]): Promise<boolean> {
   if (!Array.isArray(records)) {
-    console.warn('[storage] saveAttendanceRecords: not an array')
+    log.warn('[storage] saveAttendanceRecords: not an array')
     return false
   }
   try {
@@ -108,14 +111,14 @@ export async function saveAttendanceRecords(records: AttendanceRecord[]): Promis
     const combined = Array.isArray(existing) ? [...existing, ...records] : [...records]
     return await setStorage(STORAGE_KEYS.ATTENDANCE_RECORDS, mergeRecords(combined))
   } catch (e) {
-    console.error('[storage] saveAttendanceRecords failed:', e)
+    log.error('[storage] saveAttendanceRecords failed:', e)
     return await setStorage(STORAGE_KEYS.ATTENDANCE_RECORDS, mergeRecords(records))
   }
 }
 
 export async function overwriteAttendanceRecords(records: AttendanceRecord[]): Promise<boolean> {
   if (!Array.isArray(records)) {
-    console.warn('[storage] overwriteAttendanceRecords: not an array')
+    log.warn('[storage] overwriteAttendanceRecords: not an array')
     return false
   }
   const clean = mergeRecords(records)
@@ -133,7 +136,7 @@ export async function overwriteAttendanceRecords(records: AttendanceRecord[]): P
     }
     return success
   } catch (e) {
-    console.error('[storage] overwriteAttendanceRecords failed:', e)
+    log.error('[storage] overwriteAttendanceRecords failed:', e)
     return false
   }
 }

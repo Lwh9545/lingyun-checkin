@@ -273,7 +273,9 @@ import { useAttendanceStore } from "../stores/attendance"
 import { useToast } from "../composables/useToast"
 import { DEFAULT_CONFIG } from "../utils/constants"
 import { timeToMinutes } from "../utils/dateUtils"
+import { createLogger } from "../utils/logger"
 
+const log = createLogger('settings-view')
 const store = useAttendanceStore()
 const toast = useToast()
 
@@ -486,7 +488,7 @@ async function loadDataStats() {
       dataStats.value = await window.electronAPI.dataManager.getDataStats()
       backupList.value = await window.electronAPI.dataManager.getBackupList()
     }
-  } catch (e) { console.error("加载数据统计失败:", e) }
+  } catch (e) { log.error("加载数据统计失败:", e) }
 }
 
 async function checkForUpdates() {

@@ -51,7 +51,9 @@ import { computed } from 'vue'
 import { useAttendanceStore } from '../../stores/attendance'
 import { getStatusText } from '../../utils/attendanceUtils'
 import { getTodayString } from '../../utils/dateUtils'
+import { createLogger } from '../../utils/logger'
 
+const log = createLogger('all-records-view')
 const emit = defineEmits(['add', 'edit', 'delete'])
 const attendanceStore = useAttendanceStore()
 
@@ -81,7 +83,7 @@ async function exportAllToExcel() {
     XLSX.utils.book_append_sheet(workbook, worksheet, '打卡记录')
     XLSX.writeFile(workbook, `考勤记录_全部_${getTodayString()}.xlsx`)
   } catch (error) {
-    console.error('Excel 导出失败:', error)
+    log.error('Excel 导出失败:', error)
     alert('导出失败: ' + (error?.message || '未知错误'))
   }
 }

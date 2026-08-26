@@ -13,6 +13,9 @@ import { checkAttendanceStatus, getStatusValue, getStatusText, getEffectiveStart
 import { mergeRecords } from '../utils/recordUtils'
 import { STORAGE_KEYS } from '../utils/constants.js'
 import { useConfigStore } from './config.js'
+import { createLogger } from '../utils/logger'
+
+const log = createLogger('store')
 
 // ==================== Store 定义 ====================
 export const useAttendanceStore = defineStore('attendance', () => {
@@ -123,7 +126,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
       records.value = mergeRecords(raw)
       await _loadConfigToStore()
     } catch (error) {
-      console.error('[store] 加载记录失败:', error)
+      log.error('[store] 加载记录失败:', error)
     } finally {
       loading.value = false
     }
@@ -254,7 +257,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
       }
       return false
     } catch (error) {
-      console.error('[store] 自动上班打卡失败:', error)
+      log.error('[store] 自动上班打卡失败:', error)
       return false
     }
   }
