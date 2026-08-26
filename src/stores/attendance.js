@@ -466,7 +466,6 @@ export const useAttendanceStore = defineStore('attendance', () => {
     updateWorkSettings,
     updateCurrentTime,
     tryAutoCheckIn,
-    tryAutoCheckOut,
     resetToDefaults,
     calculateTargetTime,
     getCurrentTime,
