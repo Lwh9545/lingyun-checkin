@@ -3,42 +3,11 @@
  */
 import type { AttendanceRecord, AttendanceStatus } from '../types/core'
 
-export function mergeRecords(records: AttendanceRecord[] | null | undefined): AttendanceRecord[] {
-  if (!Array.isArray(records) || records.length === 0) return []
-
-  function pickNewerField(existingVal: string, newVal: string, newerIsRecord: boolean): string {
-    if (newVal) {
-      return existingVal ? (newerIsRecord ? newVal : existingVal) : newVal
-    }
-    return existingVal || ''
-  }
-
-  const map = new Map<string, AttendanceRecord>()
-  for (const record of records) {
-    if (!record || !record.date) continue
-
-    const existing = map.get(record.date)
-    if (!existing) {
-      map.set(record.date, { ...record })
-      continue
-    }
-
-    const existingTs = existing.timestamp || 0
-    const newTs = record.timestamp || 0
-    const newerIsRecord = newTs >= existingTs
-
-    map.set(record.date, {
-      date: record.date,
-      checkIn: pickNewerField(existing.checkIn, record.checkIn, newerIsRecord),
-      checkOut: pickNewerField(existing.checkOut, record.checkOut, newerIsRecord),
-      duration: pickNewerField(existing.duration, record.duration, newerIsRecord),
-      status: (newerIsRecord ? (record.status || existing.status) : (existing.status || record.status)) as AttendanceStatus,
-      timestamp: Math.max(existingTs, newTs)
-    })
-  }
-
-  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date))
-}
+/**
+ * mergeRecords 单一规范源：shared/recordMerger.js（CommonJS，主进程 require + 渲染进程 import 共用）
+ * 此处仅做类型化 re-export，禁止再实现第二份逻辑（FW-001 落地）。
+ */
+export { mergeRecords } from '../../shared/recordMerger.js'
 
 export function isValidRecord(record: unknown): record is AttendanceRecord {
   return !!(record && typeof record === 'object' && record !== null && 'date' in record && typeof (record as AttendanceRecord).date === 'string' && (record as AttendanceRecord).date.length > 0)

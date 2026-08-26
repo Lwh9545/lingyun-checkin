@@ -1,10 +1,11 @@
 'use strict';
 
 /**
- * 共享模块：打卡记录去重合并
- * 
+ * 共享模块：打卡记录去重合并 —— 单一规范源（FW-001 落地）
+ *
  * 使用 CommonJS 格式，可同时被 Electron 主进程 (require) 和 Vite 渲染进程 (import) 引用。
- * 规范源：src/utils/recordUtils.js 中的 mergeRecords —— 两处逻辑必须保持同步。
+ * 类型声明见同目录 recordMerger.d.ts；渲染进程通过 src/utils/recordUtils.ts re-export 引用。
+ * ⚠️ 禁止在任何其他位置重新实现 mergeRecords 逻辑，修改请直接改本文件。
  */
 
 function pickNewerField(existingVal, newVal, newerIsRecord) {
