@@ -17,6 +17,8 @@ export default defineConfig({
     sourcemap: false
   },
   server: {
+    // 仅用于 `vite dev` 前端预览服务器，不影响 Electron（Electron 加载 dist/index.html，
+    // 其 CSP 由 index.html 的 <meta> 标签控制，已严格化移除 unsafe-eval）。
     headers: {
       'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws://localhost:* https://timor.tech https://*.timor.tech"
     }
