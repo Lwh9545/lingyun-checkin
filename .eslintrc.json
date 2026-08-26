@@ -1,0 +1,30 @@
+{
+  "env": {
+    "browser": true,
+    "es2020": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "no-console": ["warn", { "allow": ["error", "warn"] }],
+    "no-debugger": "error",
+    "no-duplicate-imports": "error",
+    "no-empty": ["error", { "allowEmptyCatch": false }],
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "eqeqeq": ["error", "always"],
+    "no-eval": "error",
+    "no-param-reassign": "warn",
+    "no-async-promise-executor": "error",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  },
+  "ignorePatterns": [
+    "node_modules/**",
+    "dist*/**",
+    "release/**",
+    "*.config.js",
+    "src/types/*.d.ts"
+  ]
+}
