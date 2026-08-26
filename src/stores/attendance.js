@@ -249,19 +249,27 @@ export const useAttendanceStore = defineStore('attendance', () => {
       const result = await handleCheck()
       if (result?.success) {
         await setStorage(STORAGE_KEYS.LAST_CHECK_IN_DATE, today)
-
-        if (!silent && window.electronAPI && window.electronAPI.notification) {
-          await window.electronAPI.notification.send(
-            '✅ 自动打卡成功',
-            `上班打卡已完成: ${new Date().toLocaleTimeString()}\n状态: ${getStatusText(result.status)}`
-          )
-        }
+        await sendAutoCheckInNotification(result, silent)
         return true
       }
       return false
     } catch (error) {
       console.error('[store] 自动上班打卡失败:', error)
       return false
+    }
+  }
+
+  /**
+   * 成功后的系统通知（提取自 tryAutoCheckIn，行为完全一致）
+   * silent=true 或不存在 electronAPI 时静默跳过
+   */
+  async function sendAutoCheckInNotification(result, silent) {
+    if (silent) return
+    if (window.electronAPI && window.electronAPI.notification) {
+      await window.electronAPI.notification.send(
+        '✅ 自动打卡成功',
+        `上班打卡已完成: ${new Date().toLocaleTimeString()}\n状态: ${getStatusText(result.status)}`
+      )
     }
   }
 
