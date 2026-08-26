@@ -173,7 +173,8 @@ export const STATUS_MAP: Record<string, string> = {
   overtime: '加班',
   absent: '旷工',
   half_day_leave: '请假半天',
-  full_day_leave: '请假一天'
+  full_day_leave: '请假一天',
+  missing_check_in: '缺卡'
 }
 
 export const STATUS_VALUE_MAP: Record<string, string> = {

@@ -191,27 +191,38 @@ function createAutoCheckManager(opts) {
             const currentTime = (0, dateUtils_js_1.formatTimeShort)();
             const records = getStorageSync('attendance_records', []);
             const todayIndex = records.findIndex(r => r.date === today);
+            // 场景1:今天完全没记录 —— 不造假,记缺卡+签退
             if (todayIndex === -1) {
-                log.error('Direct check-out: no record found for today, creating one with default check-in');
-                const defaultCheckInTime = getStorageSync('workStartTime', types_js_1.DEFAULT_CONFIG.workStartTime);
+                log.warn('Direct check-out: no record today, recording as missing-check-in + checkout');
                 records.push({
                     date: today,
-                    checkIn: defaultCheckInTime,
+                    checkIn: null,
                     checkOut: currentTime,
-                    status: 'normal'
+                    status: 'missing_check_in',
+                    missing: 'check_in',
+                    source: 'system_detected'
                 });
                 await setStorageSync('attendance_records', records);
-                log.info(`Direct check-out: created new record, checkIn=${defaultCheckInTime}, checkOut=${currentTime}`);
+                log.info(`Direct check-out: created missing-check-in record, checkOut=${currentTime}`);
+                sendNotification('已记录签退(缺卡提醒)', `签退时间: ${currentTime}。今天没有签到记录,已标记为缺卡,请明天补录。`);
                 return true;
             }
             if (records[todayIndex].checkOut) {
                 log.info('Direct check-out: already checked out');
                 return false;
             }
+            // 场景2:有记录但没签到 —— 不硬填,标记缺卡
             if (!records[todayIndex].checkIn) {
-                const defaultCheckInTime = getStorageSync('workStartTime', types_js_1.DEFAULT_CONFIG.workStartTime);
-                records[todayIndex].checkIn = defaultCheckInTime;
-                log.info(`Direct check-out: set default checkIn=${defaultCheckInTime}`);
+                log.warn('Direct check-out: no checkIn, marking as missing-check-in');
+                records[todayIndex].checkIn = null;
+                records[todayIndex].missing = 'check_in';
+                records[todayIndex].status = 'missing_check_in';
+                records[todayIndex].source = 'system_detected';
+                records[todayIndex].checkOut = currentTime;
+                await setStorageSync('attendance_records', records);
+                log.info(`Direct check-out: SUCCESS with missing-check-in, saved checkOut=${currentTime}`);
+                sendNotification('已记录签退(缺卡提醒)', `签退时间: ${currentTime}。今天缺签到,已标记为缺卡,请明天补录。`);
+                return true;
             }
             records[todayIndex].checkOut = currentTime;
             await setStorageSync('attendance_records', records);
