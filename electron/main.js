@@ -56,7 +56,7 @@ const { getStorageSync, setStorageSync, overwriteStorageSync, removeStorageSync,
 
 // Initialize backup
 const backup = createBackupManager(storage, userDataPath, APP_VERSION)
-const { backupDir, initDataManager, getBackupList, restoreFromBackup, exportData, importData } = backup
+const { backupDir, initDataManager, getBackupList, restoreFromBackup, exportData, importData, moveToRecycleBin } = backup
 
 // Initialize icon utilities
 const { getValidIcon } = createIconUtils(app)
@@ -314,6 +314,17 @@ ipcMain.handle('delete-backup', async (event, backupFileName) => {
 })
 
 ipcMain.handle('clear-all-records', async () => {
+  // FW-003:破坏性操作必须给后悔药 —— 先移到回收站,再清空
+  const records = getStorageSync('attendance_records', [])
+  if (records && records.length > 0) {
+    try {
+      const recycleName = moveToRecycleBin(records)
+      log.info(`clear-all-records: moved ${records.length} records to recycle bin (${recycleName})`)
+    } catch (e) {
+      log.error('clear-all-records: recycle bin failed, abort to avoid data loss', e)
+      return false
+    }
+  }
   return overwriteStorageSync('attendance_records', [])
 })
 

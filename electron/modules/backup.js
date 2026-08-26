@@ -170,8 +170,44 @@ function createBackupManager(storage, userDataPath, appVersion) {
     restoreFromBackup,
     getBackupList,
     exportData,
-    importData
+    importData,
+    moveToRecycleBin
   };
+
+  /**
+   * 把记录移到回收站(软删除),30 天内可恢复
+   * 落地 FW-003:破坏性操作必须给后悔药
+   * @param {Array} records - 即将被清空的记录
+   * @returns {string} 回收站文件名(用于恢复)
+   */
+  function moveToRecycleBin(records) {
+    const recycleDir = path.join(userDataPath, 'recycle');
+    if (!fs.existsSync(recycleDir)) {
+      fs.mkdirSync(recycleDir, { recursive: true });
+    }
+    // 清理 30 天前的回收站文件
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    try {
+      for (const f of fs.readdirSync(recycleDir)) {
+        const fp = path.join(recycleDir, f);
+        const stat = fs.statSync(fp);
+        if (stat.mtimeMs < thirtyDaysAgo) {
+          fs.unlinkSync(fp);
+          log.info(`Recycle: expired ${f}`);
+        }
+      }
+    } catch (e) {
+      log.warn('Recycle: cleanup failed', e.message);
+    }
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `recycle_${ts}.json`;
+    fs.writeFileSync(
+      path.join(recycleDir, filename),
+      JSON.stringify({ records, deletedAt: new Date().toISOString(), count: records.length }, null, 2)
+    );
+    log.info(`Recycle: moved ${records.length} records to ${filename}`);
+    return filename;
+  }
 }
 
 module.exports = { createBackupManager };

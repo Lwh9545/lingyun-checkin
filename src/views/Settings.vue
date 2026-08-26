@@ -607,13 +607,13 @@ async function deleteBackup(name) {
 }
 
 async function clearAllRecords() {
-  if (!confirm("确定清空所有考勤记录吗？\n此操作不可撤销！")) return
+  if (!confirm("确定清空所有考勤记录吗？\n记录会先移到回收站,30 天内可从备份目录恢复。")) return
   if (!confirm("再次确认：真的要清空全部考勤记录吗？")) return
   try {
     if (!window.electronAPI?.dataManager) { toast.warning('此功能仅在桌面应用中可用'); return }
     const ok = await window.electronAPI.dataManager.clearAllRecords()
-    if (ok) { toast.success('已清空全部考勤记录'); await loadDataStats(); await store.loadRecords() }
-    else { toast.error('清空失败') }
+    if (ok) { toast.success('已清空,记录已移到回收站(30 天内可恢复)'); await loadDataStats(); await store.loadRecords() }
+    else { toast.error('清空失败(回收站写入失败,已中止以保护数据)') }
   } catch (e) { toast.error('清空失败: ' + e.message) }
 }
 

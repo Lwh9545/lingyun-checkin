@@ -36,7 +36,12 @@ const { createAutoCheckManager } = await import('../electron/modules/auto-check.
  * 构造带 mock 依赖的 manager
  */
 function createManager(initialRecords = []) {
-  let store = { attendance_records: initialRecords, workStartTime: '09:00' }
+  let store = {
+    attendance_records: initialRecords,
+    workStartTime: '09:00',
+    autoCheckOutOnShutdown: true,   // 启用关机签退(否则 shutdownCheckOut 直接 return)
+    workDays: [1, 2, 3, 4, 5]       // 周一到周五
+  }
   const notifications = []
   const logs = []
 
