@@ -35,10 +35,6 @@
                   <div class="mini-toggle" @click="toggleAutoCheckIn" :class="{ on: attendanceStore.autoCheckIn }"></div>
                 </div>
                 <div class="auto-item">
-                  <span>下班</span>
-                  <div class="mini-toggle" @click="toggleAutoCheckOut" :class="{ on: attendanceStore.autoCheckOut }"></div>
-                </div>
-                <div class="auto-item">
                   <span>自动启动</span>
                   <div class="mini-toggle" @click="toggleAutoStartup" :class="{ on: attendanceStore.autoStartup }"></div>
                 </div>
@@ -198,7 +194,6 @@ function _toggleAndSave(key) {
 }
 
 function toggleAutoCheckIn() { _toggleAndSave('autoCheckIn') }
-function toggleAutoCheckOut() { _toggleAndSave('autoCheckOut') }
 function toggleAutoStartup() { _toggleAndSave('autoStartup') }
 function toggleAutoCheckOutOnShutdown() { _toggleAndSave('autoCheckOutOnShutdown') }
 
@@ -270,11 +265,6 @@ onMounted(async () => {
     window.electronAPI.onTriggerAutoCheckIn(() => {
       const r = attendanceStore.todayRecords
       if (r && r.checkIn) return
-      handleCheck(true)
-    })
-    window.electronAPI.onTriggerAutoCheckOut(() => {
-      const r = attendanceStore.todayRecords
-      if (!r || !r.checkIn || r.checkOut) return
       handleCheck(true)
     })
     window.electronAPI.onShutdownCheckOut(() => handleCheck(false, true))

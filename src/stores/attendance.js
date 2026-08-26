@@ -5,7 +5,7 @@
  * 依赖：recordUtils（记录操作）、storageUtils（存储）、dateUtils（时间）、attendanceUtils（业务逻辑）
  */
 
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { ref, computed } from 'vue'
 import { getAttendanceRecords, saveAttendanceRecords, overwriteAttendanceRecords, getStorage, setStorage } from '../utils/storageUtils'
 import { formatTimeShort, getTodayString, calculateTargetTime } from '../utils/dateUtils'
@@ -17,16 +17,19 @@ import { useConfigStore } from './config.js'
 // ==================== Store 定义 ====================
 export const useAttendanceStore = defineStore('attendance', () => {
   // 配置从 useConfigStore 获取(单一数据源,避免重复定义)
+  // ⚠️ ref 必须用 storeToRefs 解构(Pinia 直接解构得到的是解包值,会失去响应性)
   const configStore = useConfigStore()
+  const {
+    getConfig, resetToDefaults, updateWorkSettings,
+    _loadConfigToStore, _persistConfig
+  } = configStore
   const {
     workStartTime, workEndTime, workDays,
     autoStartup, autoCheckIn, autoCheckInOffset, autoCheckOutOnShutdown,
     enableRest, restStart, restEnd,
     overtimeOnNonWorkday, overtimeOnSaturday, overtimeOnSunday, overtimeOnWorkday,
-    overtimeAfterEndThreshold, checkWindowBefore, lateThreshold,
-    getConfig, resetToDefaults, updateWorkSettings,
-    _loadConfigToStore, _persistConfig
-  } = configStore
+    overtimeAfterEndThreshold, checkWindowBefore, lateThreshold
+  } = storeToRefs(configStore)
 
   // ==================== 状态 ====================
   const records = ref([])

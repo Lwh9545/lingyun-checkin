@@ -29,14 +29,15 @@ vi.mock('../src/utils/storageUtils', () => ({
   overwriteAttendanceRecords: async (records) => { mockStore.set('attendance_records', JSON.parse(JSON.stringify(records))) }
 }))
 
-// ── 固定日期桩 ──
-vi.mock('../src/utils/dateUtils', () => ({
-  getTodayString: () => '2026-06-08',
-  formatTimeShort: () => '08:55',
-  calculateTargetTime: () => '09:00',
-  timeToMinutes: (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m },
-  minutesToTime: (min) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`
-}))
+// ── 日期桩：真实实现 + 固定 today/time ──
+vi.mock('../src/utils/dateUtils', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    getTodayString: () => '2026-06-08',
+    formatTimeShort: () => '08:55'
+  }
+})
 
 // ── attendanceUtils：真实实现，仅 isWorkDay / isInCheckWindow 可控制 ──
 vi.mock('../src/utils/attendanceUtils', async (importOriginal) => {
