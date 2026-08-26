@@ -243,15 +243,8 @@ export const useAttendanceStore = defineStore('attendance', () => {
   // ==================== 自动打卡逻辑 ====================
   async function tryAutoCheckIn(silent = false) {
     try {
-      if (!autoCheckIn.value) return false
-      if (!isWorkDay(workDays.value)) return false
-
       const today = getTodayString()
-      const lastCheckInDate = await getStorage(STORAGE_KEYS.LAST_CHECK_IN_DATE, '')
-
-      if (lastCheckInDate === today) return false
-      if (todayRecords.value?.checkIn) return false
-      if (!isInCheckWindow('上班', getConfig())) return false
+      if (!(await canAutoCheckIn(today))) return false
 
       const result = await handleCheck()
       if (result?.success) {
@@ -270,6 +263,22 @@ export const useAttendanceStore = defineStore('attendance', () => {
       console.error('[store] 自动上班打卡失败:', error)
       return false
     }
+  }
+
+  /**
+   * 自动打卡前置守卫链（提取自 tryAutoCheckIn，行为完全一致）
+   * 全部通过才允许执行 handleCheck
+   */
+  async function canAutoCheckIn(today) {
+    if (!autoCheckIn.value) return false
+    if (!isWorkDay(workDays.value)) return false
+
+    const lastCheckInDate = await getStorage(STORAGE_KEYS.LAST_CHECK_IN_DATE, '')
+    if (lastCheckInDate === today) return false
+    if (todayRecords.value?.checkIn) return false
+    if (!isInCheckWindow('上班', getConfig())) return false
+
+    return true
   }
 
   // ==================== 时间更新 ====================
