@@ -50,9 +50,7 @@ export interface AppConfig {
   // 自动打卡
   autoStartup: boolean
   autoCheckIn: boolean
-  autoCheckOut: boolean
   autoCheckInOffset: number       // 提前分钟
-  autoCheckOutOffset: number      // 延后分钟
   autoCheckOutOnShutdown: boolean
 
   // 午休
@@ -88,9 +86,7 @@ export const enum StorageKey {
   WORK_END_TIME = 'workEndTime',
   WORK_DAYS = 'workDays',
   AUTO_CHECK_IN = 'autoCheckIn',
-  AUTO_CHECK_OUT = 'autoCheckOut',
   AUTO_CHECK_IN_OFFSET = 'autoCheckInOffset',
-  AUTO_CHECK_OUT_OFFSET = 'autoCheckOutOffset',
   AUTO_CHECK_OUT_ON_SHUTDOWN = 'autoCheckOutOnShutdown',
   AUTO_STARTUP = 'autoStartup',
   ENABLE_REST = 'enableRest',
@@ -107,7 +103,6 @@ export const enum StorageKey {
   LAST_CHECK_OUT_DATE = 'lastCheckOutDate',
   LAST_AUTO_CHECK_DATE = 'lastAutoCheckDate',
   AUTO_CHECK_IN_EXECUTED = 'autoCheckInExecuted',
-  AUTO_CHECK_OUT_EXECUTED = 'autoCheckOutExecuted',
   APP_VERSION = 'app_version',
 }
 
@@ -249,8 +244,6 @@ export interface ElectronAPI {
   removeTriggerCheckOut: () => void
   onTriggerAutoCheckIn: (cb: () => void) => void
   removeTriggerAutoCheckIn: () => void
-  onTriggerAutoCheckOut: (cb: () => void) => void
-  removeTriggerAutoCheckOut: () => void
   onCheckAutoCheckIn: (cb: () => void) => void
   removeCheckAutoCheckIn: () => void
   onShutdownCheckOut: (cb: () => void) => void

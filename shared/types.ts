@@ -23,9 +23,7 @@ export interface WorkSettings {
   
   autoStartup: boolean;            // 开机自启
   autoCheckIn: boolean;            // 自动上班打卡
-  autoCheckOut: boolean;           // 自动下班打卡
   autoCheckInOffset: number;       // 上班打卡偏移（分钟）
-  autoCheckOutOffset: number;      // 下班打卡偏移（分钟）
   autoCheckOutOnShutdown: boolean; // 关机自动打卡
   
   enableRest: boolean;             // 启用午休
@@ -47,7 +45,6 @@ export interface WorkSettings {
 export interface AutoCheckState {
   lastAutoCheckDate: string;
   autoCheckInExecuted: boolean;
-  autoCheckOutExecuted: boolean;
   lastCheckInDate: string;
   lastCheckOutDate: string;
 }
@@ -79,14 +76,11 @@ export const STORAGE_KEYS = {
   WORK_END_TIME: 'workEndTime',
   WORK_DAYS: 'workDays',
   AUTO_CHECK_IN: 'autoCheckIn',
-  AUTO_CHECK_OUT: 'autoCheckOut',
   AUTO_CHECK_IN_OFFSET: 'autoCheckInOffset',
-  AUTO_CHECK_OUT_OFFSET: 'autoCheckOutOffset',
   AUTO_CHECK_OUT_ON_SHUTDOWN: 'autoCheckOutOnShutdown',
   AUTO_STARTUP: 'autoStartup',
   LAST_AUTO_CHECK_DATE: 'lastAutoCheckDate',
   AUTO_CHECK_IN_EXECUTED: 'autoCheckInExecuted',
-  AUTO_CHECK_OUT_EXECUTED: 'autoCheckOutExecuted',
   LAST_CHECK_IN_DATE: 'lastCheckInDate',
   LAST_CHECK_OUT_DATE: 'lastCheckOutDate',
   ENABLE_REST: 'enableRest',
@@ -114,9 +108,7 @@ export const DEFAULT_CONFIG: WorkSettings = {
   
   autoStartup: false,
   autoCheckIn: false,
-  autoCheckOut: false,
   autoCheckInOffset: 0,
-  autoCheckOutOffset: 0,
   autoCheckOutOnShutdown: false,
   
   enableRest: true,
@@ -143,9 +135,7 @@ export const DEFAULT_CONFIG_CAPS = {
   OVERTIME_THRESHOLD: DEFAULT_CONFIG.overtimeThreshold,
   AUTO_STARTUP: DEFAULT_CONFIG.autoStartup,
   AUTO_CHECK_IN: DEFAULT_CONFIG.autoCheckIn,
-  AUTO_CHECK_OUT: DEFAULT_CONFIG.autoCheckOut,
   AUTO_CHECK_IN_OFFSET: DEFAULT_CONFIG.autoCheckInOffset,
-  AUTO_CHECK_OUT_OFFSET: DEFAULT_CONFIG.autoCheckOutOffset,
   AUTO_CHECK_OUT_ON_SHUTDOWN: DEFAULT_CONFIG.autoCheckOutOnShutdown,
   ENABLE_REST: DEFAULT_CONFIG.enableRest,
   REST_START: DEFAULT_CONFIG.restStart,

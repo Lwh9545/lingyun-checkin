@@ -118,7 +118,6 @@ function createAutoCheckManager(opts) {
         if (lastCheckDate !== today) {
             setStorageSync('lastAutoCheckDate', today);
             setStorageSync('autoCheckInExecuted', false);
-            setStorageSync('autoCheckOutExecuted', false);
         }
     }
     /**
@@ -247,7 +246,6 @@ function createAutoCheckManager(opts) {
         if (lastCheckDate !== today) {
             setStorageSync('lastAutoCheckDate', today);
             setStorageSync('autoCheckInExecuted', false);
-            setStorageSync('autoCheckOutExecuted', false);
         }
         const { autoCheckIn, workDays, workStartTime, workEndTime, autoCheckInOffset } = getSettings();
         const now = new Date();

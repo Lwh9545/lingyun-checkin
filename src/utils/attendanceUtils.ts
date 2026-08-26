@@ -73,9 +73,7 @@ export function checkAttendanceStatus(type: CheckType, timeString: string, confi
     overtimeThreshold: config.overtimeThreshold ?? DEFAULT_CONFIG.OVERTIME_THRESHOLD,
     autoStartup: config.autoStartup ?? DEFAULT_CONFIG.AUTO_STARTUP,
     autoCheckIn: config.autoCheckIn ?? DEFAULT_CONFIG.AUTO_CHECK_IN,
-    autoCheckOut: config.autoCheckOut ?? DEFAULT_CONFIG.AUTO_CHECK_OUT,
     autoCheckInOffset: config.autoCheckInOffset ?? DEFAULT_CONFIG.AUTO_CHECK_IN_OFFSET,
-    autoCheckOutOffset: config.autoCheckOutOffset ?? DEFAULT_CONFIG.AUTO_CHECK_OUT_OFFSET,
     autoCheckOutOnShutdown: config.autoCheckOutOnShutdown ?? DEFAULT_CONFIG.AUTO_CHECK_OUT_ON_SHUTDOWN,
     checkWindowBefore: config.checkWindowBefore ?? DEFAULT_CONFIG.CHECK_WINDOW_BEFORE,
   }

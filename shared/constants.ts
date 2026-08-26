@@ -34,9 +34,7 @@ export const DEFAULT_CONFIG = {
 
   AUTO_STARTUP: false,
   AUTO_CHECK_IN: false,
-  AUTO_CHECK_OUT: false,
   AUTO_CHECK_IN_OFFSET: 0,
-  AUTO_CHECK_OUT_OFFSET: 0,
   AUTO_CHECK_OUT_ON_SHUTDOWN: false,
 
   ENABLE_REST: true,
@@ -69,15 +67,12 @@ export const STORAGE_KEYS = {
   WORK_DAYS: 'workDays',
 
   AUTO_CHECK_IN: 'autoCheckIn',
-  AUTO_CHECK_OUT: 'autoCheckOut',
   AUTO_CHECK_IN_OFFSET: 'autoCheckInOffset',
-  AUTO_CHECK_OUT_OFFSET: 'autoCheckOutOffset',
   AUTO_CHECK_OUT_ON_SHUTDOWN: 'autoCheckOutOnShutdown',
   AUTO_STARTUP: 'autoStartup',
 
   LAST_AUTO_CHECK_DATE: 'lastAutoCheckDate',
   AUTO_CHECK_IN_EXECUTED: 'autoCheckInExecuted',
-  AUTO_CHECK_OUT_EXECUTED: 'autoCheckOutExecuted',
   LAST_CHECK_IN_DATE: 'lastCheckInDate',
   LAST_CHECK_OUT_DATE: 'lastCheckOutDate',
 

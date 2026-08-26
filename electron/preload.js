@@ -60,12 +60,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeTriggerAutoCheckIn: () => {
     ipcRenderer.removeAllListeners('trigger-auto-check-in')
   },
-  onTriggerAutoCheckOut: (callback) => {
-    ipcRenderer.on('trigger-auto-check-out', () => callback())
-  },
-  removeTriggerAutoCheckOut: () => {
-    ipcRenderer.removeAllListeners('trigger-auto-check-out')
-  },
   onCheckAutoCheckIn: (callback) => {
     ipcRenderer.on('check-auto-check-in', () => callback())
   },
