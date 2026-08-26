@@ -202,6 +202,7 @@ describe('checkAttendanceStatus', () => {
     workStartTime: '09:00', workEndTime: '18:00',
     workDays: [1, 2, 3, 4, 5], lateThreshold: 15,
     overtimeAfterEndThreshold: 30, overtimeOnNonWorkday: true,
+    overtimeOnWorkday: true,
     enableRest: false, restStart: '12:00', restEnd: '14:00',
     enableSplitShift: false,
     morningStart: '09:00', morningEnd: '12:00',
