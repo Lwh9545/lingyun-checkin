@@ -4,8 +4,39 @@
  * Window management module
  */
 
-const { BrowserWindow, app } = require('electron');
+const { BrowserWindow, app, session } = require('electron');
 const path = require('path');
+
+/**
+ * 严格 CSP 策略字符串
+ * - script-src 'self': 仅允许同源脚本（禁止 unsafe-eval / unsafe-inline）
+ * - 移除 ws://localhost:*（Electron 不使用 HMR）
+ * - worker-src 'self' blob: 兼容 xlsx Web Worker
+ */
+const STRICT_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://timor.tech https://*.timor.tech",
+  "worker-src 'self' blob:"
+].join('; ');
+
+/**
+ * 在主进程注册 CSP 响应头（比 meta 标签更可靠，覆盖 file:// 和 http://）
+ * 必须在 app.ready 前调用，确保所有渲染进程加载前生效。
+ */
+function registerStrictCSP() {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [STRICT_CSP]
+      }
+    });
+  });
+}
 
 /**
  * @param {Object} opts
@@ -49,11 +80,13 @@ function createWindowManager(opts) {
       if (!process.argv.includes('--minimized')) mainWindow.show();
     });
 
+    // 始终加载构建产物 dist/index.html
+    // （electron:dev 流程为 `vite build && electron .`，无 dev server）
+    mainWindow.loadFile(opts.distIndexPath);
+
+    // 开发环境打开 DevTools 便于调试
     if (!app.isPackaged) {
-      mainWindow.loadURL('http://localhost:5173');
-      mainWindow.webContents.openDevTools();
-    } else {
-      mainWindow.loadFile(opts.distIndexPath);
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
     }
 
     mainWindow.on('close', (event) => {
@@ -65,7 +98,7 @@ function createWindowManager(opts) {
     return mainWindow;
   }
 
-  return { get window() { return mainWindow; }, createWindow };
+  return { get window() { return mainWindow; }, createWindow, registerStrictCSP };
 }
 
 module.exports = { createWindowManager };

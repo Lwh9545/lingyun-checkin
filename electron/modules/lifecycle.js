@@ -123,6 +123,9 @@ function createLifecycleManager(deps) {
       _autoCheckRef = autoCheck
       log.info('App starting...')
 
+      // 注册严格 CSP（必须在 createWindow 前调用，确保首请求即带 CSP 头）
+      windowMgr.registerStrictCSP?.()
+
       if (require('electron').Notification.isSupported()) log.info('Notification: OK')
       log.info('Platform:', process.platform)
 
