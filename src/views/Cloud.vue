@@ -383,10 +383,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCloudStore } from '../stores/cloud'
 import { useToast } from '../composables/useToast'
+import {
+  useCloudFiles,
+  getFilePreviewClass,
+  formatSize,
+  formatDate
+} from '../composables/useCloudFiles'
 
 const toast = useToast()
 const cloudStore = useCloudStore()
@@ -402,282 +407,19 @@ const {
   canGoBack
 } = storeToRefs(cloudStore)
 
-const isDragging = ref(false)
-const selectedFile = ref(null)
-const contextMenu = ref({ visible: false, x: 0, y: 0, file: null })
-const showCreateFolder = ref(false)
-const newFolderName = ref('')
-const showRename = ref(false)
-const newFileName = ref('')
-const folderInput = ref(null)
-const renameInput = ref(null)
-const searchQuery = ref('')
-const viewMode = ref('grid')
-const sortBy = ref('name')
-
 const {
-  goBack,
-  selectAndUploadFiles,
-  downloadFile,
-  createFolder,
-  deleteFile,
-  renameFile,
-  enterFolder,
-  clearError,
-  clearCompletedUploads,
-  clearCompletedDownloads,
-  loadFiles
-} = cloudStore
+  isDragging, selectedFile, contextMenu,
+  showCreateFolder, newFolderName, showRename, newFileName,
+  folderInput, renameInput, searchQuery, viewMode, sortBy,
+  pathParts, folderCount, filteredFiles,
+  selectFiles, handleDrop, handleFileClick, handleFileDoubleClick,
+  showContextMenu, enterFolderAction, downloadAction, downloadFileAction,
+  showCreateFolderDialog, createFolderAction,
+  renameAction, renameFileAction, deleteAction,
+  goToRoot, goToPath
+} = useCloudFiles(cloudStore, toast)
 
-const pathParts = computed(() => {
-  if (currentPath.value === '/') return []
-  return currentPath.value.split('/').filter(Boolean)
-})
-
-const folderCount = computed(() => {
-  return files.value.filter(f => f.type === 'folder').length
-})
-
-const filteredFiles = computed(() => {
-  let result = files.value
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(f => f.name.toLowerCase().includes(query))
-  }
-  
-  result = [...result].sort((a, b) => {
-    if (a.type === 'folder' && b.type !== 'folder') return -1
-    if (a.type !== 'folder' && b.type === 'folder') return 1
-    
-    switch (sortBy.value) {
-      case 'name': return a.name.localeCompare(b.name)
-      case 'size': return b.size - a.size
-      case 'modified': return b.modified - a.modified
-      case 'type': return a.type.localeCompare(b.type)
-      default: return 0
-    }
-  })
-  
-  return result
-})
-
-onMounted(async () => {
-  await cloudStore.initStorage()
-  await cloudStore.getStats()
-  
-  window.electronAPI?.onUploadProgress?.((data) => {
-    const task = uploadTasks.value.find(t => t.id === data.uploadId)
-    if (task) task.percent = data.percent
-  })
-  
-  window.electronAPI?.onDownloadProgress?.((data) => {
-    const task = downloadTasks.value.find(t => t.id === data.downloadId)
-    if (task) task.percent = data.percent
-  })
-})
-
-onUnmounted(() => {
-  window.electronAPI?.removeUploadProgress?.()
-  window.electronAPI?.removeDownloadProgress?.()
-})
-
-async function selectFiles() {
-  const result = await selectAndUploadFiles()
-  if (result.uploaded > 0) {
-    toast.success(`成功上传 ${result.uploaded} 个文件`)
-  }
-  if (result.error) {
-    toast.error(result.error)
-  }
-}
-
-async function handleDrop(event) {
-  isDragging.value = false
-  const droppedFiles = event.dataTransfer.files
-  
-  if (droppedFiles.length === 0) return
-  
-  toast.info(`正在上传 ${droppedFiles.length} 个文件...`)
-  
-  for (const file of droppedFiles) {
-    try {
-      await cloudStore.uploadDraggedFile(file)
-    } catch (err) {
-      toast.error(`上传 ${file.name} 失败: ${err.message}`)
-    }
-  }
-  
-  toast.success('上传完成')
-}
-
-function handleFileClick(file) {
-  selectedFile.value = file
-}
-
-function handleFileDoubleClick(file) {
-  if (file.type === 'folder') {
-    enterFolder(file.path)
-  } else {
-    downloadFileAction(file)
-  }
-}
-
-function showContextMenu(event, file) {
-  contextMenu.value = {
-    visible: true,
-    x: event.clientX,
-    y: event.clientY,
-    file
-  }
-}
-
-function enterFolderAction() {
-  if (contextMenu.value.file?.type === 'folder') {
-    enterFolder(contextMenu.value.file.path)
-    contextMenu.value.visible = false
-  }
-}
-
-async function downloadAction() {
-  const file = contextMenu.value.file
-  if (file && file.type !== 'folder') {
-    try {
-      toast.info(`正在下载 ${file.name}...`)
-      const result = await downloadFile(file.id, file.name)
-      if (result.success) {
-        toast.success(`文件已保存到: ${result.savePath}`)
-      }
-    } catch (err) {
-      toast.error(`下载失败: ${err.message}`)
-    }
-  }
-  contextMenu.value.visible = false
-}
-
-async function downloadFileAction(file) {
-  try {
-    toast.info(`正在下载 ${file.name}...`)
-    const result = await downloadFile(file.id, file.name)
-    if (result.success) {
-      toast.success(`文件已保存到: ${result.savePath}`)
-    }
-  } catch (err) {
-    toast.error(`下载失败: ${err.message}`)
-  }
-}
-
-function showCreateFolderDialog() {
-  showCreateFolder.value = true
-  newFolderName.value = ''
-  nextTick(() => folderInput.value?.focus())
-}
-
-async function createFolderAction() {
-  if (!newFolderName.value) return
-  
-  try {
-    await createFolder(newFolderName.value)
-    toast.success(`文件夹 "${newFolderName.value}" 创建成功`)
-    showCreateFolder.value = false
-    newFolderName.value = ''
-  } catch (err) {
-    toast.error(err.message)
-  }
-}
-
-function renameAction() {
-  const file = contextMenu.value.file
-  if (file) {
-    showRename.value = true
-    newFileName.value = file.name
-    contextMenu.value.visible = false
-    nextTick(() => renameInput.value?.focus())
-  }
-}
-
-async function renameFileAction() {
-  if (!newFileName.value) return
-  
-  try {
-    await renameFile(contextMenu.value.file?.id, newFileName.value)
-    toast.success('重命名成功')
-    showRename.value = false
-    newFileName.value = ''
-  } catch (err) {
-    toast.error(err.message)
-  }
-}
-
-async function deleteAction() {
-  const file = contextMenu.value.file
-  if (file) {
-    if (confirm(`确定要删除 "${file.name}" 吗？`)) {
-      try {
-        await deleteFile(file.id)
-        toast.success(`"${file.name}" 已删除`)
-      } catch (err) {
-        toast.error(err.message)
-      }
-    }
-  }
-  contextMenu.value.visible = false
-}
-
-function goToRoot() {
-  loadFiles('/')
-}
-
-function goToPath(index) {
-  const path = '/' + pathParts.value.slice(0, index + 1).join('/')
-  loadFiles(path)
-}
-
-function getFilePreviewClass(file) {
-  if (file.type === 'folder') return 'folder'
-  const ext = file.name.split('.').pop()?.toLowerCase()
-  const typeMap = {
-    'pdf': 'pdf',
-    'doc': 'doc', 'docx': 'doc',
-    'xls': 'xls', 'xlsx': 'xls',
-    'ppt': 'ppt', 'pptx': 'ppt',
-    'zip': 'zip', 'rar': 'zip', '7z': 'zip',
-    'mp3': 'audio', 'wav': 'audio', 'flac': 'audio',
-    'mp4': 'video', 'avi': 'video', 'mkv': 'video',
-    'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'webp': 'image',
-    'txt': 'text', 'md': 'text'
-  }
-  return typeMap[ext] || 'file'
-}
-
-function formatSize(bytes) {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-function formatDate(timestamp) {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now - date
-  
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前'
-  
-  return date.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-document.addEventListener('click', () => {
-  contextMenu.value.visible = false
-})
+const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = cloudStore
 </script>
 
 <style scoped>

@@ -268,20 +268,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from "vue"
+import { ref, onMounted, reactive } from "vue"
 import { useAttendanceStore } from "../stores/attendance"
 import { useToast } from "../composables/useToast"
+import { useSettingsValidation } from "../composables/useSettingsValidation"
+import { useDataManagement } from "../composables/useDataManagement"
 import { DEFAULT_CONFIG } from "../utils/constants"
-import { timeToMinutes } from "../utils/dateUtils"
-import { createLogger } from "../utils/logger"
 
-const log = createLogger('settings-view')
 const store = useAttendanceStore()
 const toast = useToast()
 
-/** 防误设：上班时间不能早于凌晨 4 点（防止 00:05 这类误配置导致凌晨自动打卡） */
-const MIN_WORK_START_MINUTES = 4 * 60
-
+// ── 设置项 schema ──
 const weekDays = [
   { value: 1, label: '一' },
   { value: 2, label: '二' },
@@ -323,6 +320,24 @@ const localSettings = reactive({
   overtimeAfterEndThreshold: DEFAULT_CONFIG.OVERTIME_AFTER_END_THRESHOLD
 })
 
+// ── 校验器（composable）──
+const { timeErrors, anyOvertimeEnabled, validateSettings } = useSettingsValidation(localSettings)
+
+// ── 数据管理（composable）──
+const {
+  appVersion, dataStats, backupList, isExporting, isImporting,
+  checkingUpdate, updateInfo, encryptionStatus,
+  loadDataStats, checkForUpdates, downloadUpdate, loadEncryptionStatus,
+  getEncryptionHint, getEncryptionLabel, getEncryptionBadgeClass,
+  exportData, importData, restoreBackup, deleteBackup, clearAllRecords,
+  openBackupFolder, formatTime
+} = useDataManagement(() => store.loadRecords(), toast)
+
+// ── 本地 UI 状态 ──
+const isSaving = ref(false)
+const historyCollapsed = ref(true)
+
+/** 从 store 配置加载到 localSettings */
 function loadSettingsFromStore() {
   const config = store.getConfig()
   for (const key of SETTING_KEYS) {
@@ -352,41 +367,6 @@ function clampNumber(field, min, max) {
   if (v > max) localSettings[field] = max
 }
 
-/** 实时校验：时间顺序错误 */
-const timeErrors = computed(() => {
-  const errs = []
-  const startMin = timeToMinutes(localSettings.workStartTime)
-  const endMin = timeToMinutes(localSettings.workEndTime)
-  if (startMin >= 0 && startMin < MIN_WORK_START_MINUTES) {
-    errs.push('上班时间不能设置在凌晨 0-4 点')
-  }
-  if (startMin >= 0 && endMin >= 0 && startMin >= endMin) {
-    errs.push('上班时间必须早于下班时间')
-  }
-  if (localSettings.enableRest) {
-    const rs = timeToMinutes(localSettings.restStart)
-    const re = timeToMinutes(localSettings.restEnd)
-    if (rs >= 0 && re >= 0 && rs >= re) {
-      errs.push('午休开始必须早于午休结束')
-    }
-    if (rs >= 0 && re >= 0 && startMin >= 0 && endMin >= 0) {
-      if (rs <= startMin || re >= endMin) {
-        errs.push('午休时间必须在工作时间范围内')
-      }
-    }
-  }
-  return errs
-})
-
-/** 是否有任何加班开关开启 */
-const anyOvertimeEnabled = computed(() =>
-  localSettings.overtimeOnSaturday ||
-  localSettings.overtimeOnSunday ||
-  localSettings.overtimeOnWorkday
-)
-
-
-
 /** 关机自动打卡开关：开启时二次确认 */
 function toggleShutdownAutoCheck() {
   if (localSettings.autoCheckOutOnShutdown) {
@@ -401,57 +381,6 @@ function toggleShutdownAutoCheck() {
   if (confirmed) {
     localSettings.autoCheckOutOnShutdown = true
   }
-}
-
-const appVersion = ref("")
-const dataStats = ref({ totalRecords: 0, backupCount: 0, backupPath: "" })
-const backupList = ref([])
-const isExporting = ref(false)
-const isImporting = ref(false)
-const isSaving = ref(false)
-const historyCollapsed = ref(true)
-const checkingUpdate = ref(false)
-const updateInfo = ref(null)
-const encryptionStatus = ref({ encrypted: false, available: false })
-
-function validateSettings(settings) {
-  const errors = []
-  const startMin = timeToMinutes(settings.workStartTime)
-  const endMin = timeToMinutes(settings.workEndTime)
-
-  if (startMin < 0 || endMin < 0) {
-    errors.push('上班时间和下班时间格式无效')
-    return errors
-  }
-
-  if (startMin >= endMin) {
-    errors.push('上班时间必须早于下班时间')
-  }
-
-  if (startMin < MIN_WORK_START_MINUTES) {
-    errors.push('上班时间不能设置在凌晨 0-4 点，请检查时间设置')
-  }
-
-  if (settings.enableRest) {
-    const restStartMin = timeToMinutes(settings.restStart)
-    const restEndMin = timeToMinutes(settings.restEnd)
-    if (restStartMin >= restEndMin) {
-      errors.push('午休开始时间必须早于午休结束时间')
-    }
-    if (restStartMin <= startMin || restEndMin >= endMin) {
-      errors.push('午休时间必须在工作时间范围内')
-    }
-  }
-
-  if (settings.lateThreshold < 0 || settings.lateThreshold > 120) {
-    errors.push('迟到阈值必须在 0-120 分钟之间')
-  }
-
-  if (settings.checkWindowBefore < 0 || settings.checkWindowBefore > 120) {
-    errors.push('打卡窗口必须在 0-120 分钟之间')
-  }
-
-  return errors
 }
 
 async function saveSettings() {
@@ -479,159 +408,6 @@ async function resetSettings() {
   await store.resetToDefaults()
   Object.assign(localSettings, store.getConfig())
   toast.success('已重置为默认设置！')
-}
-
-async function loadDataStats() {
-  try {
-    if (window.electronAPI?.dataManager) {
-      appVersion.value = await window.electronAPI.dataManager.getAppVersion()
-      dataStats.value = await window.electronAPI.dataManager.getDataStats()
-      backupList.value = await window.electronAPI.dataManager.getBackupList()
-    }
-  } catch (e) { log.error("加载数据统计失败:", e) }
-}
-
-async function checkForUpdates() {
-  if (checkingUpdate.value) return
-  checkingUpdate.value = true
-  try {
-    if (window.electronAPI?.updater) {
-      const info = await window.electronAPI.updater.check()
-      updateInfo.value = info
-      if (info?.available) {
-        toast.info(`发现新版本 v${info.version}`)
-      } else if (info?.dev) {
-        toast.info('开发模式，跳过更新检查')
-      } else {
-        toast.success('已是最新版本')
-      }
-    } else {
-      toast.info('更新功能仅在桌面应用中可用')
-    }
-  } catch (e) {
-    toast.error('检查更新失败')
-  } finally {
-    checkingUpdate.value = false
-  }
-}
-
-async function downloadUpdate() {
-  if (!window.electronAPI?.updater) return
-  toast.info('开始下载更新...')
-  const ok = await window.electronAPI.updater.download()
-  if (ok) {
-    toast.success('更新下载完成，下次启动时安装')
-  } else {
-    toast.error('下载更新失败')
-  }
-}
-
-async function loadEncryptionStatus() {
-  try {
-    if (window.electronAPI?.updater?.getEncryptionStatus) {
-      encryptionStatus.value = await window.electronAPI.updater.getEncryptionStatus()
-    }
-  } catch (_) {}
-}
-
-function getEncryptionHint() {
-  if (encryptionStatus.value.encrypted) return '已加密保护'
-  if (encryptionStatus.value.available) return '明文存储'
-  return '加密不可用'
-}
-
-function getEncryptionLabel() {
-  if (encryptionStatus.value.encrypted) return '已加密'
-  if (encryptionStatus.value.available) return '明文'
-  return '不可用'
-}
-
-function getEncryptionBadgeClass() {
-  if (encryptionStatus.value.encrypted) return 'status-badge--encrypted'
-  if (encryptionStatus.value.available) return 'status-badge--available'
-  return 'status-badge--unavailable'
-}
-
-async function exportData() {
-  if (isExporting.value) return; isExporting.value = true
-  try {
-    const now = new Date()
-    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`
-    const dp = `灵韵打卡_数据导出_${ts}.json`
-    if (!window.electronAPI?.dialog) { toast.warning('导出功能仅在桌面应用中可用'); return }
-    const result = await window.electronAPI.dialog.showSaveDialog({
-      title: "导出打卡数据",
-      defaultPath: dp,
-      filters: [{ name: "JSON Files", extensions: ["json"] }]
-    })
-    if (!result.canceled && result.filePath) {
-      const ok = await window.electronAPI.dataManager.exportData(result.filePath)
-      ok ? toast.success(`数据导出成功！位置: ${result.filePath}`) : toast.error('导出失败')
-    }
-  } catch (e) { toast.error('导出失败: ' + e.message) }
-  finally { isExporting.value = false }
-}
-
-async function importData() {
-  if (isImporting.value) return; isImporting.value = true
-  try {
-    if (!window.electronAPI?.dialog) { toast.warning('导入功能仅在桌面应用中可用'); return }
-    const result = await window.electronAPI.dialog.showOpenDialog({
-      title: "导入打卡数据",
-      filters: [{ name: "JSON Files", extensions: ["json"] }],
-      properties: ["openFile"]
-    })
-    if (!result.canceled && result.filePaths.length > 0) {
-      const res = await window.electronAPI.dataManager.importData(result.filePaths[0])
-      if (res.success) { toast.success(`数据导入成功！版本: ${res.version}`); await loadDataStats(); await store.loadRecords() }
-      else { toast.error('导入失败: ' + res.error) }
-    }
-  } catch (e) { toast.error('导入失败: ' + e.message) }
-  finally { isImporting.value = false }
-}
-
-async function restoreBackup(name) {
-  if (!confirm(`确定恢复此备份吗？\n${name}\n\n会覆盖当前数据。`)) return
-  try {
-    const ok = await window.electronAPI.dataManager.restoreFromBackup(name)
-    if (ok) { toast.success('恢复成功！'); await loadDataStats(); await store.loadRecords() }
-    else { toast.error('恢复失败') }
-  } catch (e) { toast.error('恢复失败: ' + e.message) }
-}
-
-async function deleteBackup(name) {
-  if (!confirm(`确定删除此备份吗？\n${name}`)) return
-  try {
-    const ok = await window.electronAPI.dataManager.deleteBackup(name)
-    if (ok) { await loadDataStats(); toast.success('备份已删除') }
-    else { toast.error('删除失败') }
-  } catch (e) { toast.error('删除失败: ' + e.message) }
-}
-
-async function clearAllRecords() {
-  if (!confirm("确定清空所有考勤记录吗？\n记录会先移到回收站,30 天内可从备份目录恢复。")) return
-  if (!confirm("再次确认：真的要清空全部考勤记录吗？")) return
-  try {
-    if (!window.electronAPI?.dataManager) { toast.warning('此功能仅在桌面应用中可用'); return }
-    const ok = await window.electronAPI.dataManager.clearAllRecords()
-    if (ok) { toast.success('已清空,记录已移到回收站(30 天内可恢复)'); await loadDataStats(); await store.loadRecords() }
-    else { toast.error('清空失败(回收站写入失败,已中止以保护数据)') }
-  } catch (e) { toast.error('清空失败: ' + e.message) }
-}
-
-function openBackupFolder() {
-  const p = dataStats.value.backupPath
-  if (p && window.electronAPI?.shell?.openPath) {
-    window.electronAPI.shell.openPath(p)
-  } else {
-    toast.warning('备份目录不存在或当前环境不支持')
-  }
-}
-
-function formatTime(date) {
-  if (!date) return "未知"
-  const d = new Date(date)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`
 }
 
 onMounted(async () => {
