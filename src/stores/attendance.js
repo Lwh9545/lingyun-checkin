@@ -370,38 +370,6 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
   }
 
-  async function tryAutoCheckOut(silent = false) {
-    try {
-      if (!autoCheckOut.value) return false
-      if (!isWorkDay(workDays.value)) return false
-
-      const today = getTodayString()
-      const lastCheckOutDate = await getStorage(STORAGE_KEYS.LAST_CHECK_OUT_DATE, '')
-
-      if (lastCheckOutDate === today) return false
-      if (!todayRecords.value?.checkIn) return false
-      if (todayRecords.value?.checkOut) return false
-      if (!isInCheckWindow('下班', getConfig())) return false
-
-      const result = await handleCheck()
-      if (result?.success) {
-        await setStorage(STORAGE_KEYS.LAST_CHECK_OUT_DATE, today)
-
-        if (!silent && window.electronAPI && window.electronAPI.notification) {
-          await window.electronAPI.notification.send(
-            '✅ 自动打卡成功',
-            `下班打卡已完成: ${new Date().toLocaleTimeString()}\n工作时长: ${todayWorkDuration.value}`
-          )
-        }
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('[store] 自动下班打卡失败:', error)
-      return false
-    }
-  }
-
   // ==================== 时间更新 ====================
   function updateCurrentTime() {
     const now = new Date()
