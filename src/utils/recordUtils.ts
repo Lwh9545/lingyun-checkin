@@ -10,7 +10,9 @@ import type { AttendanceRecord, AttendanceStatus } from '../types/core'
 export { mergeRecords } from '../../shared/recordMerger.js'
 
 export function isValidRecord(record: unknown): record is AttendanceRecord {
-  return !!(record && typeof record === 'object' && record !== null && 'date' in record && typeof (record as AttendanceRecord).date === 'string' && (record as AttendanceRecord).date.length > 0)
+  if (!record || typeof record !== 'object' || record === null) return false
+  if (!('date' in record)) return false
+  return typeof record.date === 'string' && record.date.length > 0
 }
 
 export function findRecordByDate(records: AttendanceRecord[], date: string): AttendanceRecord | undefined {

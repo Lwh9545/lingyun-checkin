@@ -6,7 +6,7 @@ import { STATUS_MAP, STATUS_VALUE_MAP, DEFAULT_CONFIG_WITH_CAPS as DEFAULT_CONFI
 import { timeToMinutes, getDayOfWeek } from './dateUtils'
 
 /** 旷工状态常量 */
-const ABSENT_STATUS = 'absent'
+const ABSENT_STATUS: AttendanceStatus = 'absent'
 
 /** 分段工作制旷工判定：超过此时间算旷工（午休开始时间） */
 const getAbsentThreshold = (config: AppConfig): number => {
@@ -30,8 +30,8 @@ export function getStatusText(status: string | number | undefined | null): strin
 }
 
 export function getStatusValue(statusText: string): AttendanceStatus {
-  if (statusText === '旷工') return ABSENT_STATUS as AttendanceStatus
-  return (STATUS_VALUE_MAP[statusText] || statusText || 'normal') as AttendanceStatus
+  if (statusText === '旷工') return ABSENT_STATUS
+  return STATUS_VALUE_MAP[statusText] ?? 'normal'
 }
 
 export function getEffectiveStartTime(config: Partial<AppConfig>): string {
@@ -118,7 +118,7 @@ function checkCheckInStatus(currentMinutes: number, config: AppConfig): Attendan
   const absentThreshold = getAbsentThreshold(config)
   if (currentMinutes <= absentThreshold) return 'late'
 
-  return ABSENT_STATUS as AttendanceStatus
+  return ABSENT_STATUS
 }
 
 /**

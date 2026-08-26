@@ -52,6 +52,20 @@ const FETCH_TIMEOUT_MS = 8000
 // API
 // ═══════════════════════════════════════════════
 
+/** timor.tech API 返回的单条节假日信息 */
+interface TimorHolidayInfo {
+  holiday: boolean
+  name: string
+  wage: number
+  date: string
+}
+
+/** timor.tech API 响应结构 */
+interface TimorApiResponse {
+  code: number
+  holiday?: Record<string, TimorHolidayInfo>
+}
+
 async function fetchYearFromAPI(year: number): Promise<{ holidays: Record<string, string>; adjustments: Record<string, boolean> } | null> {
   try {
     const controller = new AbortController()
@@ -60,7 +74,7 @@ async function fetchYearFromAPI(year: number): Promise<{ holidays: Record<string
     clearTimeout(timeout)
     if (!resp.ok) return null
 
-    const json = await resp.json()
+    const json: TimorApiResponse = await resp.json()
     if (json.code !== 0) return null
 
     const holidays: Record<string, string> = {}
@@ -68,11 +82,11 @@ async function fetchYearFromAPI(year: number): Promise<{ holidays: Record<string
 
     for (const [key, info] of Object.entries(json.holiday || {})) {
       const dateStr = key.length === 5 ? `${year}-${key}` : key
-      if ((info as any).holiday) {
-        holidays[dateStr] = (info as any).name || '节假日'
+      if (info.holiday) {
+        holidays[dateStr] = info.name || '节假日'
       }
-      if ((info as any).wage && (info as any).date) {
-        const rawDate: string = (info as any).date
+      if (info.wage && info.date) {
+        const rawDate: string = info.date
         const fullDate = rawDate.includes('-') && rawDate.length === 10
           ? rawDate
           : `${year}-${rawDate}`

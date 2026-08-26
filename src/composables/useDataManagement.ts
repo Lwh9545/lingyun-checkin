@@ -7,6 +7,7 @@
 
 import { ref } from 'vue'
 import { createLogger } from '../utils/logger'
+import { getErrorMessage } from '../utils/errorUtils'
 
 /** 数据统计信息 */
 export interface DataStats {
@@ -162,7 +163,7 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
         else toast.error('导出失败')
       }
     } catch (e) {
-      toast.error('导出失败: ' + (e as Error).message)
+      toast.error('导出失败: ' + getErrorMessage(e))
     } finally {
       isExporting.value = false
     }
@@ -193,7 +194,7 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
         }
       }
     } catch (e) {
-      toast.error('导入失败: ' + (e as Error).message)
+      toast.error('导入失败: ' + getErrorMessage(e))
     } finally {
       isImporting.value = false
     }
@@ -212,7 +213,7 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
         toast.error('恢复失败')
       }
     } catch (e) {
-      toast.error('恢复失败: ' + (e as Error).message)
+      toast.error('恢复失败: ' + getErrorMessage(e))
     }
   }
 
@@ -228,7 +229,7 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
         toast.error('删除失败')
       }
     } catch (e) {
-      toast.error('删除失败: ' + (e as Error).message)
+      toast.error('删除失败: ' + getErrorMessage(e))
     }
   }
 
@@ -250,7 +251,7 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
         toast.error('清空失败(回收站写入失败,已中止以保护数据)')
       }
     } catch (e) {
-      toast.error('清空失败: ' + (e as Error).message)
+      toast.error('清空失败: ' + getErrorMessage(e))
     }
   }
 

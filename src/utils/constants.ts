@@ -2,6 +2,7 @@
  * 前端常量配置（TypeScript）
  * 前端专用常量在此文件维护，避免跨模块导入问题
  */
+import type { AttendanceStatus } from '../types/core'
 
 // ==================== 时间常量 ====================
 export const TIME = {
@@ -172,7 +173,7 @@ export const STATUS_MAP: Record<string, string> = {
   missing_check_in: '缺卡'
 }
 
-export const STATUS_VALUE_MAP: Record<string, string> = {
+export const STATUS_VALUE_MAP: Record<string, AttendanceStatus> = {
   '正常': 'normal',
   '迟到': 'late',
   '早退': 'early',

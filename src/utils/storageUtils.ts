@@ -26,6 +26,7 @@ function hasElectronAPI(): boolean {
 
 export async function getStorage<T = unknown>(key: string, defaultValue: T): Promise<T> {
   if (_cache[key] !== undefined && _cache[key] !== null) {
+    // 泛型边界：_cache[key] 为 unknown，T 由调用方指定，此处类型断言是泛型函数的必要边界
     return _cache[key] as T
   }
   try {
@@ -39,6 +40,7 @@ export async function getStorage<T = unknown>(key: string, defaultValue: T): Pro
     if (key in _cache) {
       _cache[key] = value
     }
+    // 同上：泛型边界，value 为 unknown，需断言为 T
     return value as T
   } catch (e) {
     log.error(`[storage] get failed [${key}]:`, e)

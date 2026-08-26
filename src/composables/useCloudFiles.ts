@@ -7,6 +7,7 @@
 
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import type { Ref } from 'vue'
+import { getErrorMessage } from '../utils/errorUtils'
 
 /** 文件项 */
 export interface CloudFileItem {
@@ -168,7 +169,7 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
       try {
         await uploadDraggedFile(file)
       } catch (err) {
-        toast.error(`上传 ${file.name} 失败: ${(err as Error).message}`)
+        toast.error(`上传 ${file.name} 失败: ${getErrorMessage(err)}`)
       }
     }
 
@@ -219,7 +220,7 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
         toast.success(`文件已保存到: ${result.savePath}`)
       }
     } catch (err) {
-      toast.error(`下载失败: ${(err as Error).message}`)
+      toast.error(`下载失败: ${getErrorMessage(err)}`)
     }
   }
 
@@ -239,7 +240,7 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
       showCreateFolder.value = false
       newFolderName.value = ''
     } catch (err) {
-      toast.error((err as Error).message)
+      toast.error(getErrorMessage(err))
     }
   }
 
@@ -263,7 +264,7 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
       showRename.value = false
       newFileName.value = ''
     } catch (err) {
-      toast.error((err as Error).message)
+      toast.error(getErrorMessage(err))
     }
   }
 
@@ -275,7 +276,7 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
           await deleteFile(file.id)
           toast.success(`"${file.name}" 已删除`)
         } catch (err) {
-          toast.error((err as Error).message)
+          toast.error(getErrorMessage(err))
         }
       }
     }
