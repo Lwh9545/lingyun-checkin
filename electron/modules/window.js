@@ -84,6 +84,15 @@ function createWindowManager(opts) {
     // （electron:dev 流程为 `vite build && electron .`，无 dev server）
     mainWindow.loadFile(opts.distIndexPath);
 
+    // 渲染进程错误转发：console-message 把渲染报错拉到主进程日志落盘，
+    // 根治"错误只在用户 DevTools 里、技能/日志看不到"的盲区（P0 工作包）
+    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+      if (level >= 3) { // 3=ERROR
+        const { createLogger } = require('../shared/logger.js');
+        createLogger('renderer').error(`[console] ${message} (${sourceId}:${line})`);
+      }
+    });
+
     // 开发环境打开 DevTools 便于调试
     if (!app.isPackaged) {
       mainWindow.webContents.openDevTools({ mode: 'detach' });

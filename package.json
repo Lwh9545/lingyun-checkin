@@ -8,7 +8,7 @@
     "build": "vite build",
     "start": "electron .",
     "electron:dev": "vite build && electron .",
-    "build:win": "vite build && electron-builder --win",
+    "build:win": "vite build && electron-builder --win && node scripts/hash-manifest.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint 'src/**/*.{ts,vue}' 'electron/**/*.js' 'shared/**/*.js'"
@@ -54,6 +54,7 @@
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
     },
+    "artifactName": "LingyunCheckin-Setup-${version}.${ext}",
     "win": {
       "icon": "public/app.ico",
       "target": [
@@ -70,8 +71,10 @@
       "installerHeaderIcon": "public/app.ico"
     },
     "publish": {
-      "provider": "generic",
-      "url": "https://your-update-server.com/releases"
+      "provider": "github",
+      "owner": "Lwh9545",
+      "repo": "lingyun-checkin",
+      "releaseType": "release"
     }
   }
 }

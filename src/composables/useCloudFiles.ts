@@ -89,16 +89,16 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
 
   // ── 计算属性 ──
   const pathParts = computed(() => {
-    if (currentPath.value === '/') return []
+    if (!currentPath.value || currentPath.value === '/') return []
     return currentPath.value.split('/').filter(Boolean)
   })
 
   const folderCount = computed(() =>
-    files.value.filter(f => f.type === 'folder').length
+    (files.value ?? []).filter(f => f.type === 'folder').length
   )
 
   const filteredFiles = computed(() => {
-    let result = files.value
+    let result = files.value ?? []
 
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()

@@ -344,6 +344,17 @@ function createAutoCheckManager(opts) {
                 log.info('=== Shutdown check-out END ===');
                 return result;
             }
+            // 时间窗约束（用户要求）：未到下班时间禁止自动签退
+            const workEndTime = getStorageSync('workEndTime', types_js_1.DEFAULT_CONFIG.workEndTime);
+            const [eh, em] = workEndTime.split(':').map(Number);
+            const endMinutes = eh * 60 + em;
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            if (nowMinutes < endMinutes) {
+                result.reason = `before work end time (${workEndTime}), auto check-out forbidden`;
+                log.info('Shutdown check-out: ', result.reason);
+                log.info('=== Shutdown check-out END ===');
+                return result;
+            }
             const records = getStorageSync('attendance_records', []);
             const todayRecord = records.find(r => r.date === today);
             const hasCheckIn = todayRecord && todayRecord.checkIn;

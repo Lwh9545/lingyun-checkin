@@ -84,6 +84,15 @@ function createLifecycleManager(deps) {
       log.info('[SIGINT] received')
       safeShutdownCheckOut('SIGINT').then(() => process.exit(0))
     })
+
+    // ⚠️ 主进程崩溃兜底：记录后不退出。对打卡应用，活着比退出好——
+    // 贸然退出可能丢掉关机签退窗口，storage 有内存缓存+落盘机制兜底一致性
+    process.on('uncaughtException', (err) => {
+      log.error('[uncaughtException]', err)
+    })
+    process.on('unhandledRejection', (reason) => {
+      log.error('[unhandledRejection]', reason)
+    })
   }
 
   /**

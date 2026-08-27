@@ -72,9 +72,13 @@ const AUTO_CHECK_INTERVAL = 60000  // 60 秒
 
 // 错误边界：捕获子组件异常，防止白屏
 onErrorCaptured((err, instance, info) => {
-  log.error('[error-boundary]', err)
+  // 提取完整错误信息（err 可能是非 Error 对象）
+  const errMessage = err instanceof Error
+    ? err.message
+    : (typeof err === 'string' ? err : (err?.message || err?.toString?.() || '未知错误'))
+  log.error('[error-boundary]', { err, message: errMessage, info, stack: err?.stack, ctor: err?.constructor?.name })
   globalError.value = {
-    message: err?.message || '未知错误',
+    message: errMessage,
     info: info || '',
     timestamp: Date.now()
   }

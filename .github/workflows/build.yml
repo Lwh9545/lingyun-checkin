@@ -1,0 +1,44 @@
+# CI：push 即全量验证 + 构建产物（灵韵打卡 · AISE 全面升级 P1）
+name: build
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: desktop-app/package-lock.json
+
+      - name: Install & Test
+        working-directory: desktop-app
+        run: |
+          npm ci
+          npx vitest run
+
+      - name: Build Windows installer (含哈希清单)
+        working-directory: desktop-app
+        env:
+          # 真证书采购后在此接入（T6）：secrets.CSC_LINK / secrets.CSC_KEY_PASSWORD
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: npm run build:win
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            desktop-app/release/*.exe
+            desktop-app/release/*.blockmap
+            desktop-app/release/latest.yml
+            desktop-app/release/SHA256SUMS.txt
+          if-no-files-found: error
