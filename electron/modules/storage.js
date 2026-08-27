@@ -133,8 +133,47 @@ function createStorage(userDataPath) {
       return _dataCache;
     } catch (error) {
       log.error('Read failed:', error);
-      return {};
+      return _recoverFromCorruption();
     }
+  }
+
+  /** FM-006 损坏自愈：优先从最近 auto-backup 恢复；无备份则隔离坏文件留证（绝不静默清空后覆盖） */
+  function _recoverFromCorruption() {
+    let recovered = null;
+    try {
+      const backupDir = path.join(userDataPath, 'backups');
+      if (fs.existsSync(backupDir)) {
+        const autos = fs.readdirSync(backupDir).filter(f => AUTO_RE.test(f)).sort().reverse();
+        for (const name of autos) {
+          try {
+            const raw = fs.readFileSync(path.join(backupDir, name));
+            const text = _isEncryptedFile(raw) ? _decrypt(raw) : raw.toString('utf8');
+            recovered = JSON.parse(text);
+            // 恢复内容原子写回主文件，并重建缓存
+            const json = JSON.stringify(recovered, null, 2);
+            const tmpPath = storagePath + '.tmp';
+            fs.writeFileSync(tmpPath, json);
+            fs.renameSync(tmpPath, storagePath);
+            _dataCache = recovered;
+            _cacheDirty = false;
+            _isEncrypted = false;
+            log.warn('FM-006 self-heal: recovered storage from', name);
+            return _dataCache;
+          } catch (e) { /* 该备份也坏，尝试更早一份 */ }
+        }
+      }
+      // 无可用备份：隔离坏文件保留证据
+      try {
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        fs.renameSync(storagePath, path.join(userDataPath, `storage.json.corrupt-${stamp}`));
+      } catch (e) { /* 文件可能不存在 */ }
+      log.warn('Corrupt storage quarantined, starting fresh (no usable backup)');
+    } catch (e) {
+      log.error('Recovery failed:', e);
+    }
+    _dataCache = {};
+    _cacheDirty = false;
+    return _dataCache;
   }
 
   function _writeData(data) {
@@ -142,11 +181,10 @@ function createStorage(userDataPath) {
       const json = JSON.stringify(data, null, 2);
       const encrypted = _safeStorageAvailable ? _encrypt(json) : null;
 
-      if (encrypted) {
-        fs.writeFileSync(storagePath, encrypted);
-      } else {
-        fs.writeFileSync(storagePath, json);
-      }
+      // 原子写：先写临时文件再 rename，强杀/断电时半写不可见（FM-006 预防）
+      const tmpPath = storagePath + '.tmp';
+      fs.writeFileSync(tmpPath, encrypted || json);
+      fs.renameSync(tmpPath, storagePath);
       _dataCache = data;
       _cacheDirty = false;
       _isEncrypted = !!encrypted;
