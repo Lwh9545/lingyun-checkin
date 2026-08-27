@@ -51,6 +51,7 @@ import { computed } from 'vue'
 import { useAttendanceStore } from '../../stores/attendance'
 import { getStatusText } from '../../utils/attendanceUtils'
 import { getTodayString } from '../../utils/dateUtils'
+import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS } from '../../utils/exportUtils'
 import { createLogger } from '../../utils/logger'
 
 const log = createLogger('all-records-view')
@@ -73,14 +74,14 @@ async function exportAllToExcel() {
   if (attendanceStore.records.length === 0) return
   try {
     const XLSX = await import('xlsx')
-    const data = attendanceStore.records.map(r => ({
-      '日期': r.date, '星期': getWeekday(r.date),
-      '上班时间': r.checkIn || '--:--', '下班时间': r.checkOut || '--:--',
-      '工作时长': r.duration || '--', '状态': getStatusText(r.status)
-    }))
+    const data = buildExportRows(attendanceStore.records, getWeekday)
     const worksheet = XLSX.utils.json_to_sheet(data)
+    worksheet['!cols'] = EXPORT_COL_WIDTHS
+    const statsSheet = XLSX.utils.json_to_sheet(buildStatsRows(attendanceStore.records, getWeekday))
+    statsSheet['!cols'] = [{ wch: 12 }, { wch: 24 }]
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '打卡记录')
+    XLSX.utils.book_append_sheet(workbook, statsSheet, '汇总')
     XLSX.writeFile(workbook, `考勤记录_全部_${getTodayString()}.xlsx`)
   } catch (error) {
     log.error('Excel 导出失败:', error)

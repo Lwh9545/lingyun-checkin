@@ -72,6 +72,13 @@
               <option value="late">迟到</option>
               <option value="early">早退</option>
               <option value="overtime">加班</option>
+              <option value="leave">请假</option>
+            </select>
+          </div>
+          <div v-if="editingRecord.status === 'leave'" class="form-row">
+            <span class="form-label">请假类型</span>
+            <select v-model="editingRecord.leaveType" class="form-input">
+              <option v-for="t in LEAVE_TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
             </select>
           </div>
         </div>
@@ -88,6 +95,7 @@
 import { ref, onMounted } from 'vue'
 import { useAttendanceStore } from '../stores/attendance'
 import { calculateEffectiveDuration } from '../utils/attendanceUtils'
+import { LEAVE_TYPES } from '../utils/chartUtils'
 import { getTodayString } from '../utils/dateUtils'
 import { useToast } from '../composables/useToast'
 import DayView from './records/DayView.vue'
@@ -109,7 +117,8 @@ function openEditModal(record) {
     checkIn: record.checkIn || '',
     checkOut: record.checkOut || '',
     status: record.status || 'normal',
-    duration: record.duration || ''
+    duration: record.duration || '',
+    leaveType: record.leaveType || 'annual'
   }
   showEditModal.value = true
 }
@@ -135,15 +144,23 @@ function closeEditModal() {
 async function saveEdit() {
   const record = { ...editingRecord.value }
   if (!record.date) { toast.warning('请选择日期'); return }
-  if (!record.checkIn && !record.checkOut) { toast.warning('请至少填写上班或下班时间'); return }
-  if (record.checkIn && record.checkOut) {
-    record.duration = calculateEffectiveDuration(record.checkIn, record.checkOut, {
-      enableRest: attendanceStore.enableRest,
-      restStart: attendanceStore.restStart,
-      restEnd: attendanceStore.restEnd
-    })
+  if (record.status === 'leave') {
+    // 请假契约：无需上下班时间，leaveType 必选，工时置空
+    if (!record.leaveType) { toast.warning('请选择请假类型'); return }
+    record.checkIn = ''
+    record.checkOut = ''
+    record.duration = '请假'
   } else {
-    record.duration = ''
+    if (!record.checkIn && !record.checkOut) { toast.warning('请至少填写上班或下班时间'); return }
+    if (record.checkIn && record.checkOut) {
+      record.duration = calculateEffectiveDuration(record.checkIn, record.checkOut, {
+        enableRest: attendanceStore.enableRest,
+        restStart: attendanceStore.restStart,
+        restEnd: attendanceStore.restEnd
+      })
+    } else {
+      record.duration = ''
+    }
   }
   await attendanceStore.addRecord(record)
   closeEditModal()

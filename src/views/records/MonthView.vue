@@ -90,7 +90,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAttendanceStore } from '../../stores/attendance'
-import { getStatusText } from '../../utils/attendanceUtils'
+import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS } from '../../utils/exportUtils'
 
 const emit = defineEmits(['add'])
 const attendanceStore = useAttendanceStore()
@@ -184,14 +184,14 @@ async function exportMonthToExcel() {
   const records = attendanceStore.records.filter(r => r.date.startsWith(targetMonth))
   if (records.length === 0) return
   const XLSX = await import('xlsx')
-  const data = records.map(r => ({
-    '日期': r.date, '星期': getWeekday(r.date),
-    '上班时间': r.checkIn || '--:--', '下班时间': r.checkOut || '--:--',
-    '工作时长': r.duration || '--', '状态': getStatusText(r.status)
-  }))
+  const data = buildExportRows(records, getWeekday)
   const worksheet = XLSX.utils.json_to_sheet(data)
+  worksheet['!cols'] = EXPORT_COL_WIDTHS
+  const statsSheet = XLSX.utils.json_to_sheet(buildStatsRows(records, getWeekday))
+  statsSheet['!cols'] = [{ wch: 12 }, { wch: 24 }]
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, '打卡记录')
+  XLSX.utils.book_append_sheet(workbook, statsSheet, '月度汇总')
   XLSX.writeFile(workbook, `考勤记录_${targetMonth}.xlsx`)
 }
 </script>

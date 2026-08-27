@@ -24,6 +24,8 @@ export default defineConfig({
     }
   },
   test: {
+    // E2E 归 playwright（npm run test:e2e），单测不收集 e2e/ 目录
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary'],

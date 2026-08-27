@@ -10,6 +10,7 @@
 const { ipcMain, dialog, shell } = require('electron')
 const fs = require('fs')
 const path = require('path')
+const v = require('./ipc-validate')
 
 /**
  * 注册基础 IPC handlers
@@ -37,10 +38,22 @@ function registerBaseIpcHandlers(deps) {
   // ==================== Storage / Tray ====================
   ipcMain.on('update-tray-status', (event, status) => trayMgr.updateTrayStatus(status))
 
-  ipcMain.handle('storage-get', (event, key, defaultValue) => getStorageSync(key, defaultValue))
-  ipcMain.handle('storage-set', async (event, key, value) => setStorageSync(key, value))
-  ipcMain.handle('storage-overwrite', async (event, key, value) => overwriteStorageSync(key, value))
-  ipcMain.handle('storage-remove', async (event, key) => removeStorageSync(key))
+  ipcMain.handle('storage-get', (event, key, defaultValue) => {
+    if (!v.validateStorageKey(key).ok) return defaultValue
+    return getStorageSync(key, defaultValue)
+  })
+  ipcMain.handle('storage-set', async (event, key, value) => {
+    if (!v.validateStorageKey(key).ok) return false
+    return setStorageSync(key, value)
+  })
+  ipcMain.handle('storage-overwrite', async (event, key, value) => {
+    if (!v.validateStorageKey(key).ok) return false
+    return overwriteStorageSync(key, value)
+  })
+  ipcMain.handle('storage-remove', async (event, key) => {
+    if (!v.validateStorageKey(key).ok) return false
+    return removeStorageSync(key)
+  })
 
   // ==================== Auto-startup ====================
   ipcMain.handle('auto-startup-set', async (event, enabled) => autoStartup.setAutoStartup(enabled))
@@ -48,7 +61,10 @@ function registerBaseIpcHandlers(deps) {
 
   // ==================== Backup / Data ====================
   ipcMain.handle('get-backup-list', async () => getBackupList())
-  ipcMain.handle('restore-from-backup', async (event, name) => restoreFromBackup(name))
+  ipcMain.handle('restore-from-backup', async (event, name) => {
+    if (!v.validateSafeBasename(name).ok) return { success: false, message: 'invalid backup name' }
+    return restoreFromBackup(name)
+  })
   ipcMain.handle('export-data', async (event, p) => exportData(p))
   ipcMain.handle('import-data', async (event, p) => importData(p))
   ipcMain.handle('get-app-version', () => APP_VERSION)
@@ -73,6 +89,7 @@ function registerBaseIpcHandlers(deps) {
 
   ipcMain.handle('delete-backup', async (event, backupFileName) => {
     try {
+      if (!v.validateSafeBasename(backupFileName).ok) return false
       const filePath = path.join(backupDir, backupFileName)
       if (!fs.existsSync(filePath)) return false
       fs.unlinkSync(filePath)
@@ -102,10 +119,19 @@ function registerBaseIpcHandlers(deps) {
   // ==================== Dialog / Shell ====================
   ipcMain.handle('dialog-show-save', (event, options) => dialog.showSaveDialog(windowMgr.window, options))
   ipcMain.handle('dialog-show-open', (event, options) => dialog.showOpenDialog(windowMgr.window, options))
-  ipcMain.handle('shell-open-path', (event, filePath) => shell.openPath(filePath))
+  ipcMain.handle('shell-open-path', (event, filePath) => {
+    const check = v.assertOpenablePath(filePath)
+    if (!check.ok) { log.warn('shell-open-path blocked:', check.reason); return false }
+    return shell.openPath(filePath)
+  })
 
   // ==================== Notification / Window ====================
-  ipcMain.handle('send-notification', (event, title, body) => { notify.send(title, body); return true })
+  ipcMain.handle('send-notification', (event, title, body) => {
+    const t = v.validateNotifyText(title)
+    if (!t.ok) return false
+    notify.send(t.value, v.validateNotifyText(body).value || '')
+    return true
+  })
   ipcMain.handle('window-minimize', () => { if (windowMgr.window) windowMgr.window.minimize(); return true })
   ipcMain.handle('window-show', () => { if (windowMgr.window) (windowMgr.window.show(), windowMgr.window.focus()); return true })
   ipcMain.handle('window-close', async () => {

@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { mergeRecords } = require('../../shared/recordMerger.js');
 const { createLogger } = require('../../shared/logger.js');
+const { shouldBackupToday, rotateBackups, todayBackupName, AUTO_RE } = require('./auto-backup.js');
 const log = createLogger('storage');
 
 // ── Encryption constants ──
@@ -178,6 +179,28 @@ function createStorage(userDataPath) {
     }
   }
 
+  /** 自动滚动备份：每日首次写入前快照旧状态（FW-003 后悔药 + FM-006 损坏防线），失败不阻塞主流程 */
+  function ensureAutoBackup() {
+    try {
+      const backupDir = path.join(userDataPath, 'backups');
+      if (!fs.existsSync(storagePath)) return;
+      if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+      const existing = fs.readdirSync(backupDir).filter(f => AUTO_RE.test(f));
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const latest = existing.sort().at(-1) || null;
+      if (!shouldBackupToday(latest, today)) return;
+      fs.copyFileSync(storagePath, path.join(backupDir, todayBackupName(today)));
+      const { remove } = rotateBackups([...existing, todayBackupName(today)], 7);
+      for (const f of remove) {
+        try { fs.unlinkSync(path.join(backupDir, f)); } catch (e) { log.warn('rotate unlink failed:', f); }
+      }
+      log.info('auto-backup created:', todayBackupName(today));
+    } catch (e) {
+      log.warn('auto-backup skipped:', e.message);
+    }
+  }
+
   function getStorageSync(key, defaultValue = null) {
     const data = _readData();
     const value = data[key] !== undefined ? data[key] : defaultValue;
@@ -188,6 +211,7 @@ function createStorage(userDataPath) {
   }
 
   function setStorageSync(key, value) {
+    ensureAutoBackup();
     const data = _readData();
     if (key === 'attendance_records' && Array.isArray(value)) {
       const existing = Array.isArray(data['attendance_records']) ? data['attendance_records'] : [];
@@ -199,6 +223,7 @@ function createStorage(userDataPath) {
   }
 
   function overwriteStorageSync(key, value) {
+    ensureAutoBackup();
     const data = _readData();
     if (key === 'attendance_records' && Array.isArray(value)) {
       data[key] = mergeRecords(value);

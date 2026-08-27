@@ -84,6 +84,9 @@
       </div>
     </div>
 
+    <!-- 近14天工时趋势 -->
+    <TrendChart :records="records" />
+
     <!-- 近7天打卡记录 -->
     <div class="chart-section">
       <div class="section-header">
@@ -198,6 +201,7 @@ import { ref, computed, watch } from 'vue'
 import { useAttendanceStore } from '../stores/attendance'
 import { storeToRefs } from 'pinia'
 import StatCard from '../components/StatCard.vue'
+import TrendChart from '../components/TrendChart.vue'
 import { computeStatsFromRecords } from '../utils/attendanceUtils'
 
 const store = useAttendanceStore()

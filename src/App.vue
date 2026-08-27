@@ -60,8 +60,11 @@
 import { onMounted, onUnmounted, ref, watch, onErrorCaptured } from "vue"
 import { useAttendanceStore } from "./stores/attendance"
 import Toast from "./components/Toast.vue"
+import { watchSystemTheme } from "./utils/themeUtils"
 import { loadCachedHolidays, refreshHolidayData } from "./utils/holidays"
 import { createLogger } from "./utils/logger"
+
+let themeUnbind = null
 
 const log = createLogger('app-root')
 const attendanceStore = useAttendanceStore()
@@ -117,6 +120,12 @@ watch(
 )
 
 onMounted(async () => {
+  // 主题跟随系统：项目已有 [data-theme="dark"] 变量体系，此处接入系统监听
+  themeUnbind = watchSystemTheme(
+    window.matchMedia('(prefers-color-scheme: dark)'),
+    t => { document.documentElement.dataset.theme = t }
+  )
+
   await attendanceStore.loadRecords()
   attendanceStore.updateCurrentTime()
 
@@ -131,6 +140,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (themeUnbind) { themeUnbind(); themeUnbind = null }
   stopAutoCheckTimer()
 })
 </script>
