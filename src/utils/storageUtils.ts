@@ -86,14 +86,6 @@ export async function removeStorage(key: string): Promise<boolean> {
   }
 }
 
-export function clearCache(key: string): void {
-  if (key in _cache) _cache[key] = null
-}
-
-export function clearAllCache(): void {
-  Object.keys(_cache).forEach(k => { _cache[k] = null })
-}
-
 // ══════════════════════════════════
 // 业务函数
 // ══════════════════════════════════
