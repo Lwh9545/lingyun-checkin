@@ -32,14 +32,6 @@ export interface AttendanceRecord {
 
 export type CheckType = '上班' | '下班'
 
-export interface CheckResult {
-  success: boolean
-  type?: CheckType
-  status?: AttendanceStatus
-  time?: string
-  message?: string
-}
-
 // ══════════════════════════════════
 // 应用配置
 // ══════════════════════════════════
@@ -154,15 +146,6 @@ export interface WeekDay {
   hasCheckOut: boolean
   status: string
   isComplete: boolean
-}
-
-export interface WeekStats {
-  days: WeekDay[]
-  checked: number
-  completed: number
-  workDays: number
-  onTime: number
-  rate: number
 }
 
 // ══════════════════════════════════
