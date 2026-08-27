@@ -13,8 +13,12 @@ export type AttendanceStatus =
   | 'early'
   | 'overtime'
   | 'absent'
+  | 'leave'
   | 'half_day_leave'
   | 'full_day_leave'
+
+/** 请假类型（新契约：status='leave' 时必带，见 chartUtils.LEAVE_TYPES） */
+export type LeaveType = 'sick' | 'annual' | 'personal' | 'comp'
 
 export interface AttendanceRecord {
   date: string              // YYYY-MM-DD
@@ -23,6 +27,7 @@ export interface AttendanceRecord {
   status: AttendanceStatus
   duration: string          // "8小时30分钟" 或空
   timestamp: number         // Unix ms
+  leaveType?: LeaveType     // 请假类型（仅 status='leave' 时有意义；half/full_day_leave 为旧词汇，仅兼容旧数据导入）
 }
 
 export type CheckType = '上班' | '下班'
