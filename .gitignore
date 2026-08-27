@@ -29,3 +29,6 @@ release/
 release-build/
 release-installer/
 release-new/
+
+vitest-out.txt
+*.tmp.log
