@@ -10,47 +10,9 @@
     </div>
 
     <template v-else>
-    <!-- 标题 + 月份切换（与 Dashboard/Salary 同款日历选择器） -->
-    <div class="dash-header fade-in-up">
-      <h1 class="dash-title">费用报销</h1>
-      <button class="month-picker-btn" @click="showMonthPicker = !showMonthPicker">
-        <svg class="picker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <span>{{ selectedYear }}年{{ selectedMonth }}月</span>
-        <svg class="picker-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- 月份选择器弹窗（与 Dashboard/Salary 完全同款 CSS 类） -->
-    <div v-if="showMonthPicker" class="month-picker-overlay" @click.self="showMonthPicker = false">
-      <div class="month-picker">
-        <div class="picker-header">
-          <button class="picker-btn" @click="decreaseYear">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <span class="picker-year">{{ pickerYear }}年</span>
-          <button class="picker-btn" @click="increaseYear">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-        <div class="picker-months">
-          <button
-            v-for="month in 12"
-            :key="month"
-            class="month-item"
-            :class="{ active: pickerYear === selectedYear && month === selectedMonth }"
-            @click="selectMonth(month)"
-          >
-            {{ month }}月
-          </button>
-        </div>
-      </div>
+    <!-- 面板标题（月份由 Finance 头部统一切换） -->
+    <div class="panel-header fade-in-up">
+      <h1 class="panel-title">费用报销</h1>
     </div>
 
     <!-- 新增一笔表单卡片（打工人随手记） -->
@@ -125,7 +87,7 @@
         :disabled="!currentRecords.length"
         @click="exportReimbursementSheet"
       >
-        导出 {{ selectedMonth }} 月报销单
+        导出 {{ month }} 月报销单
       </button>
     </div>
 
@@ -183,48 +145,35 @@ import {
   totalCents,
   topCategory,
   monthRecords,
-} from '../utils/reimbursementUtils'
-import { buildReimbursementRows, buildReimbursementSummaryRows, REIMBURSEMENT_COL_WIDTHS, exportWorkbook } from '../utils/exportUtils'
-import { STORAGE_KEYS } from '../utils/constants'
-import { getStorage, setStorage } from '../utils/storageUtils'
-import { getTodayString } from '../utils/dateUtils'
-import { createLogger } from '../utils/logger'
-import { useToast } from '../composables/useToast'
-import { useEscapeClose } from '../composables/useEscapeClose'
-import StatCard from '../components/StatCard.vue'
+} from '../../utils/reimbursementUtils'
+import { buildReimbursementRows, buildReimbursementSummaryRows, REIMBURSEMENT_COL_WIDTHS, exportWorkbook } from '../../utils/exportUtils'
+import { STORAGE_KEYS } from '../../utils/constants'
+import { getStorage, setStorage } from '../../utils/storageUtils'
+import { getTodayString } from '../../utils/dateUtils'
+import { createLogger } from '../../utils/logger'
+import { useToast } from '../../composables/useToast'
+import StatCard from '../../components/StatCard.vue'
 
-const log = createLogger('reimbursement-view')
+const props = defineProps({
+  year: { type: Number, required: true },
+  month: { type: Number, required: true }
+})
+
+const log = createLogger('reimbursement-panel')
 const toast = useToast()
 
-/** 视图级加载态（本视图无 attendanceStore，独立控制骨架屏） */
+/** 视图级加载态（本面板无 attendanceStore，独立控制骨架屏） */
 const viewLoading = ref(true)
 onMounted(() => {
   // 首屏渲染完成后关闭骨架屏，导出等耗时场景可按需重新置 true
   const t = setTimeout(() => { viewLoading.value = false; clearTimeout(t) }, 0)
 })
 
-const now = new Date()
-const currentYear = now.getFullYear()
 const today = getTodayString()
 
-// 月选择器（与 Salary/Dashboard 完全同语义）
-const selectedYear = ref(Number(today.slice(0, 4)))
-const selectedMonth = ref(Number(today.slice(5, 7)))
-const showMonthPicker = ref(false)
-useEscapeClose(showMonthPicker, () => { showMonthPicker.value = false })
-const pickerYear = ref(Number(today.slice(0, 4)))
-
-function selectMonth(month) {
-  selectedMonth.value = month
-  selectedYear.value = pickerYear.value
-  showMonthPicker.value = false
-}
-function increaseYear() {
-  if (pickerYear.value < currentYear) pickerYear.value++
-}
-function decreaseYear() {
-  if (pickerYear.value > currentYear - 1) pickerYear.value--
-}
+// 月份由 Finance 头部统一提供
+const selectedYear = computed(() => props.year)
+const selectedMonth = computed(() => props.month)
 
 // ── 新增表单：日期默认今日，类型默认 food（打工人最常记），金额空待填 ──
 const form = reactive({
@@ -302,7 +251,7 @@ async function removeRecord(r) {
   toast.success('已删除该笔报销')
 }
 
-// ── 导出 Excel 报销单（明细 + 汇总双 sheet，与工资对账单一目了然） ──
+// ── 导出 Excel 报销单（明细 + 汇总双 sheet） ──
 async function exportReimbursementSheet() {
   if (!currentRecords.value.length) return
   const monthStr = `${selectedYear.value}-${String(selectedMonth.value).padStart(2, '0')}`
@@ -330,115 +279,18 @@ onMounted(async () => {
 
 <style scoped>
 .reimbursement-page {
-  padding: var(--space-lg);
-  max-width: 720px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.dash-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.dash-title {
-  font-size: 22px;
+.panel-header { display: flex; align-items: center; }
+.panel-title {
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
 }
-
-/* ═══════════════════════════════════
-   月份选择器（与 Salary/Dashboard 完全同款 CSS 类，保证视觉锚点一致）
-   ═══════════════════════════════════ */
-.month-picker-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-weight: 600;
-}
-.month-picker-btn:hover {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-border-light);
-}
-.picker-icon { width: 16px; height: 16px; color: var(--color-text-tertiary); }
-.picker-arrow { width: 14px; height: 14px; color: var(--color-text-tertiary); transition: transform 0.2s ease; }
-.month-picker-btn:hover .picker-arrow { transform: rotate(180deg); }
-
-.month-picker-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--color-bg-mask);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal);
-  animation: fadeIn 0.2s ease;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.month-picker {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  min-width: 280px;
-  animation: slideUp 0.2s ease;
-}
-@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
-}
-.picker-btn {
-  min-width: var(--touch-min);
-  min-height: var(--touch-min);
-  width: var(--touch-min);
-  height: var(--touch-min);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: var(--color-bg-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  transition: all 0.2s ease;
-}
-.picker-btn:hover { background: var(--color-border-light); }
-.picker-btn svg { width: 16px; height: 16px; }
-.picker-year { font-size: 16px; font-weight: 600; color: var(--color-text-primary); }
-.picker-months {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.month-item {
-  padding: 10px;
-  border: none;
-  background: var(--color-bg-secondary);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.month-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
-.month-item.active { background: var(--color-primary); color: var(--color-white); }
 
 /* ═══════════════════════════════════
    新增表单卡片（打工人随手记 4 字段）
@@ -526,23 +378,6 @@ onMounted(async () => {
 .add-btn:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
 .add-btn svg { width: 14px; height: 14px; }
 
-/* ═══════════════════════════════════
-   Hero 合计卡（与工资 pay-hero 同尺寸渐变）
-   ═══════════════════════════════════ */
-.hero-card {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg) var(--space-xl);
-  color: var(--color-white);
-  box-shadow: var(--shadow-glow);
-}
-.hero-label { font-size: 14px; opacity: 0.9; }
-.hero-value { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.hero-hint { font-size: 12px; opacity: 0.75; margin-left: auto; }
-
 /* 统计卡 3 列 */
 .stats-grid {
   display: grid;
@@ -551,7 +386,7 @@ onMounted(async () => {
 }
 
 /* ═══════════════════════════════════
-   明细卡 + 导出按钮（与 Salary.detail-card 100% 同 CSS）
+   明细卡 + 导出按钮
    ═══════════════════════════════════ */
 .detail-card {
   background: var(--color-bg-card);
@@ -561,24 +396,6 @@ onMounted(async () => {
   box-shadow: var(--shadow-card);
 }
 .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
-.detail-actions { display: flex; align-items: center; gap: var(--space-sm); }
-.export-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-primary);
-  background: transparent;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.export-btn:hover:not(:disabled) { background: var(--color-primary); color: var(--color-white); }
-.export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.export-btn svg { width: 13px; height: 13px; }
 .detail-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); }
 .detail-count { font-size: 12px; color: var(--color-text-tertiary); }
 
@@ -656,7 +473,7 @@ onMounted(async () => {
   color: var(--color-danger);
 }
 
-/* 空态三段式（与 Salary 完全同 CSS） */
+/* 空态 */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -664,23 +481,8 @@ onMounted(async () => {
   gap: 6px;
   padding: var(--space-2xl) var(--space-lg);
 }
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  color: var(--color-text-placeholder);
-  margin-bottom: 8px;
-}
-.empty-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-.empty-sub {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
 
-/* 导出按钮操作行（与 Salary 页同尺寸） */
+/* 导出按钮操作行 */
 .export-row {
   display: flex;
   align-items: center;

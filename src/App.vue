@@ -18,17 +18,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           <span class="nav-label">仪表盘</span>
         </router-link>
-        <router-link to="/records" class="nav-item" active-class="active" title="记录">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          <span class="nav-label">记录</span>
-        </router-link>
-        <router-link to="/salary" class="nav-item" active-class="active" title="工资">
+        <router-link to="/finance" class="nav-item" active-class="active" title="财务">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-          <span class="nav-label">工资</span>
-        </router-link>
-        <router-link to="/reimbursement" class="nav-item" active-class="active" title="报销">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 4-4V2z"/><path d="M8 10h8M8 14h5"/></svg>
-          <span class="nav-label">报销</span>
+          <span class="nav-label">财务</span>
         </router-link>
         <router-link to="/cloud" class="nav-item" active-class="active" title="网盘">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -41,7 +33,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <span class="version-tag">v2.0</span>
+        <span class="version-tag">v2.1</span>
       </div>
     </aside>
 

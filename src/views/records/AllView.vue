@@ -20,9 +20,14 @@
       </div>
     </div>
 
-    <!-- 记录列表 -->
+    <!-- 记录列表（按年月分组） -->
     <div class="all-list glass-card-strong fade-in-scale" style="animation-delay:0.1s">
-      <div class="record-row" v-for="record in displayedRecords" :key="record.date">
+      <template v-for="group in groupedRecords" :key="group.key">
+        <div class="month-group-header">
+          <span class="month-group-title">{{ group.month }}</span>
+          <span class="month-group-count">{{ group.records.length }} 条</span>
+        </div>
+        <div class="record-row" v-for="record in group.records" :key="record.date">
         <div class="record-date-col">
           <span class="record-date">{{ record.date }}</span>
           <span class="record-weekday">{{ getWeekday(record.date) }}</span>
@@ -44,6 +49,7 @@
           <button class="mini-btn delete" @click="$emit('delete', record.date)">删除</button>
         </div>
       </div>
+      </template>
       <div class="all-empty" v-if="displayedRecords.length === 0">
         <span class="empty-icon">📋</span>
         <span class="empty-text">{{ tabFilter === 'recent' ? '近 7 天暂无打卡记录' : '暂无打卡记录' }}</span>
@@ -91,6 +97,22 @@ const recentDateSet = computed(() => {
 const displayedRecords = computed(() => {
   if (tabFilter.value === 'all') return sortedRecords.value
   return sortedRecords.value.filter(r => recentDateSet.value.has(r.date))
+})
+
+/** 按年月分组（YYYY-MM 分组头，跨月浏览一目了然） */
+const groupedRecords = computed(() => {
+  const groups = []
+  let current = null
+  for (const r of displayedRecords.value) {
+    const ym = r.date.slice(0, 7)
+    if (!current || current.key !== ym) {
+      const [y, m] = ym.split('-')
+      current = { key: ym, month: `${y}年${Number(m)}月`, records: [] }
+      groups.push(current)
+    }
+    current.records.push(r)
+  }
+  return groups
 })
 
 /** @type {{ value: number, name: string }[]} */
@@ -195,6 +217,17 @@ async function exportAllToExcel() {
 
 /* === 记录列表 === */
 .all-list { margin: 0 20px; padding: 8px 0; }
+
+/* 年月分组头 */
+.month-group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 20px 6px;
+}
+.month-group-header:not(:first-child) { border-top: 1px solid var(--color-border-light); margin-top: 8px; }
+.month-group-title { font-size: 13px; font-weight: 700; color: var(--color-primary); }
+.month-group-count { font-size: 11px; color: var(--color-text-tertiary); }
 
 .record-row {
   display: flex; align-items: center; gap: 12px;

@@ -55,14 +55,14 @@ test.describe('灵韵打卡 Electron 应用', () => {
       try { localStorage.removeItem('salary_hourly_wage') } catch (_) {}
     })
 
-    const nav = page.locator('text=工资').first()
+    const nav = page.locator('text=财务').first()
     await expect(nav).toBeVisible({ timeout: 5000 })
     await nav.click()
     await expect(page.locator('text=工资核对器')).toBeVisible({ timeout: 5000 })
     const boundary = page.locator('text=/error-boundary|出错了|发生错误/i')
     await expect(boundary).toHaveCount(0)
 
-    // 月选择器（与 Dashboard 同款）点击展开 + 选 3 月关闭
+    // 月选择器（与 Dashboard 同款，Finance 头部共享实例）点击展开 + 选 3 月关闭
     const pickerBtn = page.locator('.month-picker-btn')
     await expect(pickerBtn).toBeVisible()
     await pickerBtn.click()
@@ -85,8 +85,8 @@ test.describe('灵韵打卡 Electron 应用', () => {
     await page.waitForTimeout(600) // 等待 electron IPC 存盘 + Toast 渲染（500ms 够）
     await expect(page.locator('text=/加班费时薪已保存/')).toBeVisible({ timeout: 5000 })
 
-    // 回工资页
-    await page.locator('text=工资').first().click()
+    // 回财务页（默认落在工资核对 Tab）
+    await page.locator('text=财务').first().click()
     await expect(page.locator('text=工资核对器')).toBeVisible({ timeout: 5000 })
     // 工资页应不再显示 wage-hint-bar（时薪已设置）
     await expect(page.locator('.wage-hint-bar')).toHaveCount(0)
@@ -109,10 +109,11 @@ test.describe('灵韵打卡 Electron 应用', () => {
       try { localStorage.setItem('reimbursement_records', '[]') } catch (_) { /* noop */ }
     })
 
-    // 1. 导航进入报销页
-    const nav = page.locator('text=报销').first()
+    // 1. 导航进入财务页 → 切到费用报销 Tab
+    const nav = page.locator('text=财务').first()
     await expect(nav).toBeVisible({ timeout: 5000 })
     await nav.click()
+    await page.locator('.finance-tab-btn:has-text("费用报销")').click()
     await expect(page.locator('text=费用报销')).toBeVisible({ timeout: 5000 })
     const boundary = page.locator('text=/error-boundary|出错了|发生错误/i')
     await expect(boundary).toHaveCount(0)

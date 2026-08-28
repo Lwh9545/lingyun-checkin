@@ -16,19 +16,21 @@ const routes = [
     component: () => import('../views/Dashboard.vue')
   },
   {
-    path: '/records',
-    name: 'Records',
-    component: () => import('../views/Records.vue')
+    path: '/finance',
+    name: 'Finance',
+    component: () => import('../views/Finance.vue')
   },
   {
     path: '/salary',
-    name: 'Salary',
-    component: () => import('../views/Salary.vue')
+    redirect: '/finance'
   },
   {
     path: '/reimbursement',
-    name: 'Reimbursement',
-    component: () => import('../views/Reimbursement.vue')
+    redirect: '/finance'
+  },
+  {
+    path: '/records',
+    redirect: '/dashboard'
   },
   {
     path: '/settings',
