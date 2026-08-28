@@ -157,6 +157,15 @@ async function handleCheck(isAuto = false, fromShutdown = false) {
     if (result.success === false) { log.warn("打卡失败:", result.message); return }
     checkSuccess.value = true
     updateTrayStatus()
+    // v2.1：打卡结果状态如实当场反馈，禁止「成功绿闪」掩盖迟到/旷工/加班事实
+    const typeLabel = result.type === "上班" ? "上班打卡" : "下班打卡"
+    const timeLabel = result.time || new Date().toLocaleTimeString()
+    const st = result.status
+    if (st === "absent") toast.error(`${typeLabel}已记录：旷工（${timeLabel}，已远超上班时间）`)
+    else if (st === "late") toast.warning(`${typeLabel}已记录：迟到（${timeLabel}）`)
+    else if (st === "early") toast.warning(`${typeLabel}已记录：早退（${timeLabel}）`)
+    else if (st === "overtime") toast.success(`${typeLabel}已记录：加班（${timeLabel}）`)
+    else toast.success(`${typeLabel}成功（${timeLabel}）`)
     if ((isAuto || fromShutdown) && window.electronAPI && window.electronAPI.notification) {
       const msg = result.type === "上班"
         ? `上班打卡已完成: ${new Date().toLocaleTimeString()}`
