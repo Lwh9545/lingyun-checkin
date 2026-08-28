@@ -286,7 +286,7 @@ onMounted(async () => {
 
 .panel-header { display: flex; align-items: center; }
 .panel-title {
-  font-size: 20px;
+  font-size: var(--text-xl-plus);
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;

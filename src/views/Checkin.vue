@@ -149,6 +149,24 @@ const lineBarClass = computed(() => {
 let clockTimer = null
 let isClicking = false
 
+// v2.1 性能：窗口隐藏/最小化时暂停每秒时钟（Page Visibility API），
+// 避免后台空转触发 Vue 重渲染；恢复可见时立即校时并重启
+function startClock() {
+  if (clockTimer !== null) return
+  attendanceStore.updateCurrentTime()
+  clockTimer = setInterval(() => attendanceStore.updateCurrentTime(), 1000)
+}
+function stopClock() {
+  if (clockTimer !== null) {
+    clearInterval(clockTimer)
+    clockTimer = null
+  }
+}
+function onVisibilityChange() {
+  if (document.hidden) stopClock()
+  else startClock()
+}
+
 async function handleCheck(isAuto = false, fromShutdown = false) {
   if (isClicking) return
   isClicking = true
@@ -207,8 +225,8 @@ useKeyboard({
 
 onMounted(async () => {
   await attendanceStore.loadRecords()
-  attendanceStore.updateCurrentTime()
-  clockTimer = setInterval(() => attendanceStore.updateCurrentTime(), 1000)
+  startClock()
+  document.addEventListener('visibilitychange', onVisibilityChange)
   window.addEventListener('keydown', onGlobalKey)
   updateTrayStatus()
   if (window.electronAPI) {
@@ -226,7 +244,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (clockTimer) clearInterval(clockTimer)
+  stopClock()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
   window.removeEventListener('keydown', onGlobalKey)
 })
 </script>
@@ -327,7 +346,7 @@ onUnmounted(() => {
 .check-button.success { animation: successPop 0.5s ease; }
 .check-button.auto-success {
   animation: autoSuccessGlow 2s ease;
-  background: linear-gradient(145deg, #34d399, var(--color-success), #059669);
+  background: linear-gradient(145deg, #34d399, var(--color-success), var(--color-success-strong));
   box-shadow: 0 16px 48px rgba(16, 185, 129, 0.32), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .check-label {

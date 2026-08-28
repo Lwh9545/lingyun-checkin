@@ -255,9 +255,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: #fef2f2;
-  border-bottom: 1px solid #fecaca;
-  color: #991b1b;
+  background: var(--color-danger-bg);
+  border-bottom: 1px solid var(--color-danger-border);
+  color: var(--color-danger-strong);
   font-size: 13px;
   flex-shrink: 0;
 }
@@ -266,7 +266,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   font-size: 18px;
-  color: #991b1b;
+  color: var(--color-danger-strong);
   cursor: pointer;
   padding: 0 4px;
   min-width: var(--touch-min);

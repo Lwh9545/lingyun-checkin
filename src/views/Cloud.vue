@@ -686,7 +686,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .size-icon {
-  background: linear-gradient(135deg, var(--color-success), #059669);
+  background: linear-gradient(135deg, var(--color-success), var(--color-success-strong));
   color: var(--color-white);
 }
 

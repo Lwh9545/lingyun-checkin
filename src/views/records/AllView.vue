@@ -158,7 +158,7 @@ async function exportAllToExcel() {
 .all-header-left {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
-.all-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); flex-shrink: 0; white-space: nowrap; }
+.all-title { font-size: var(--text-md); font-weight: 600; color: var(--color-text-primary); flex-shrink: 0; white-space: nowrap; }
 
 .all-tab-switch {
   display: inline-flex;
@@ -203,7 +203,7 @@ async function exportAllToExcel() {
   cursor: pointer; transition: all var(--transition-fast);
 }
 .add-record-chip:hover { background: var(--color-primary-dark); box-shadow: 0 4px 12px var(--color-primary-glow); transform: translateY(-1px); }
-.add-record-chip svg { width: 14px; height: 14px; flex-shrink: 0; stroke: #fff; }
+.add-record-chip svg { width: 14px; height: 14px; flex-shrink: 0; stroke: var(--color-white); }
 
 .export-chip {
   padding: 8px 16px; min-height: 32px; border-radius: 999px; border: none;

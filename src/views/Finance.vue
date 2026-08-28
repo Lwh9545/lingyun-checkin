@@ -118,7 +118,7 @@ function decreaseYear() {
 }
 
 .dash-title {
-  font-size: 22px;
+  font-size: var(--text-2xl-plus);
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
