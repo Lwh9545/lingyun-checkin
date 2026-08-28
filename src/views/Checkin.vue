@@ -27,7 +27,7 @@
               <span class="status-tag" :class="statusTagClass">{{ getStatusText(attendanceStore.todayRecords.status) }}</span>
             </div>
             <div class="punch-time" v-else>
-              <span class="time-text placeholder">等待打卡</span>
+              <span class="time-text placeholder">待打卡</span>
             </div>
           </div>
         </div>
@@ -47,9 +47,10 @@
             <div class="punch-title">下班打卡</div>
             <div class="punch-time" v-if="attendanceStore.todayRecords?.checkOut">
               <span class="time-text">{{ attendanceStore.todayRecords.checkOut }}</span>
+              <span class="status-tag" :class="statusTagClass">{{ getStatusText(attendanceStore.todayRecords.status) }}</span>
             </div>
             <div class="punch-time" v-else>
-              <span class="time-text placeholder">{{ attendanceStore.todayRecords?.checkIn ? '等待打卡' : '--:--' }}</span>
+              <span class="time-text placeholder">{{ attendanceStore.todayRecords?.checkIn ? '待打卡' : '--:--' }}</span>
             </div>
           </div>
         </div>
@@ -371,7 +372,12 @@ onUnmounted(() => {
   font-size: 12px; color: var(--color-text-tertiary);
   display: flex; align-items: center; gap: 6px;
 }
-.window-warn { color: var(--color-warning, #b45309); }
+.window-warn {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--color-warning, #b45309);
+  font-weight: 600;
+}
 kbd {
   font-family: var(--font-mono); font-size: 11px;
   padding: 2px 6px; border-radius: 6px;

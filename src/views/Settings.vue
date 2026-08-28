@@ -537,6 +537,7 @@ onMounted(async () => {
 
 .time-row-compact {
   min-height: 28px;
+  padding-right: 16px; /* 开关右缘与 setting-item 的开关列共线（跨卡对齐） */
 }
 
 .time-row-2col {

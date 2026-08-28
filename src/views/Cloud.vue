@@ -30,6 +30,11 @@
       </div>
     </div>
 
+    <!-- 页头（与其他页面统一：大标题结构） -->
+    <div class="dash-header">
+      <h1 class="dash-title">网盘</h1>
+    </div>
+
     <!-- 顶部工具栏 -->
     <div class="cloud-toolbar">
       <div class="toolbar-left">
@@ -492,6 +497,20 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 /* ===== 顶部工具栏 ===== */
+/* 页头（与 Dashboard/Finance/Settings 同构） */
+.dash-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0 12px;
+}
+.dash-title {
+  font-size: var(--text-2xl-plus);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
 .cloud-toolbar {
   display: flex;
   justify-content: space-between;
