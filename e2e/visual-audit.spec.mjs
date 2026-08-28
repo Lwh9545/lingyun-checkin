@@ -30,7 +30,15 @@ test.describe('视觉取证：逐页截图', () => {
     page = await app.waitForEvent('window', { predicate: isMain }).catch(() => null)
       || app.windows().find(isMain) || await app.firstWindow()
     await page.waitForLoadState('domcontentloaded')
-    await page.waitForTimeout(1200) // 等骨架屏/字体稳定
+    // 大视口（贴近用户真实窗口）：窄视口下 flex-wrap 掩盖的布局问题在大窗下才暴露
+    // Electron 下 setViewportSize 无效，须 resize 原生 BrowserWindow
+    await app.evaluate(({ BrowserWindow }, size) => {
+      const win = BrowserWindow.getAllWindows().find(w => !w.getURL().startsWith('devtools://'))
+      win?.setSize(size.w, size.h)
+    }, { w: 1440, h: 900 })
+    // 等骨架屏消失（sqlite 初始化在 E2E 下较慢，固定 sleep 会截到骨架）
+    await page.waitForSelector('.skeleton-grid', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await page.waitForTimeout(400) // 字体/动画稳定
     fs.mkdirSync(OUT, { recursive: true })
   })
 

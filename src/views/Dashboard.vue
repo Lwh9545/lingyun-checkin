@@ -121,12 +121,12 @@
             <div class="dd-info">
               <div class="dd-info-top">
                 <span class="dd-title">上班</span>
-                <span class="dd-status">{{ selectedDayRecord.checkIn ? '正常打卡' : '待打卡' }}</span>
+                <span class="dd-status">{{ checkinLabel('in') }}</span>
               </div>
             </div>
             <div class="dd-time-wrap">
               <span class="dd-time">{{ selectedDayRecord.checkIn || '--:--' }}</span>
-              <span class="dd-sub">{{ selectedDayRecord.checkIn ? '正常打卡' : '待打卡' }}</span>
+              <span class="dd-sub">{{ checkinLabel('in') }}</span>
             </div>
           </div>
           <!-- 下班 -->
@@ -137,12 +137,12 @@
             <div class="dd-info">
               <div class="dd-info-top">
                 <span class="dd-title">下班</span>
-                <span class="dd-status">{{ selectedDayRecord.checkOut ? '正常打卡' : '待打卡' }}</span>
+                <span class="dd-status">{{ checkinLabel('out') }}</span>
               </div>
             </div>
             <div class="dd-time-wrap">
               <span class="dd-time">{{ selectedDayRecord.checkOut || '--:--' }}</span>
-              <span class="dd-sub">{{ selectedDayRecord.checkOut ? '正常打卡' : '待打卡' }}</span>
+              <span class="dd-sub">{{ checkinLabel('out') }}</span>
             </div>
           </div>
         </div>
@@ -286,6 +286,22 @@ const todayWeeklyIndex = computed(() => {
 })
 const selectedDayIndex = ref(todayWeeklyIndex.value)
 const selectedDayRecord = computed(() => recentWeekRecords.value[selectedDayIndex.value] || null)
+
+// 状态行文案：如实反映打卡状态（加班/迟到/早退），不再用「正常打卡」掩盖真实状态
+function checkinLabel(kind) {
+  const r = selectedDayRecord.value
+  if (!r) return '待打卡'
+  if (kind === 'in') {
+    if (!r.checkIn) return '待打卡'
+    if (r.status === 'late') return '迟到'
+    if (r.status === 'missing_check_in') return '缺卡'
+    return '已打卡'
+  }
+  if (!r.checkOut) return '待打卡'
+  if (r.status === 'overtime') return '加班'
+  if (r.status === 'early') return '早退'
+  return '已下班'
+}
 
 watch(recentWeekRecords, () => {
   if (!recentWeekRecords.value[selectedDayIndex.value]) {

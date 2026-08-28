@@ -257,7 +257,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 560px;
+  max-width: 720px; /* 与全局容器宽统一（打卡卡自身 360px 居中不受影响） */
   margin: 0 auto;
 }
 

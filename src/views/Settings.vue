@@ -1,5 +1,10 @@
 <template>
   <div class="settings-page">
+    <!-- 页头（与其他页面统一：大标题结构） -->
+    <div class="dash-header fade-in-up">
+      <h1 class="dash-title">设置</h1>
+    </div>
+
     <!-- 骨架屏 -->
     <div v-if="loading" class="skeleton-grid" aria-busy="true" aria-label="加载中">
       <div class="skeleton skeleton-line short"></div>
@@ -464,8 +469,23 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 页头（与 Finance/Dashboard 同构） */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0 0;
+}
+.dash-title {
+  font-size: var(--text-2xl-plus);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
 .settings-page {
-  max-width: 560px;
+  max-width: 720px; /* 与 Dashboard/Finance 统一容器宽 */
   margin: 0 auto;
   padding: 16px 0 40px;
   display: flex;
@@ -475,7 +495,7 @@ onMounted(async () => {
 
 /* === 卡片 === */
 .settings-card {
-  margin: 0 20px;
+  margin: 0;
   background: var(--color-bg-card-solid);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

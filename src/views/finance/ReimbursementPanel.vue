@@ -486,7 +486,7 @@ onMounted(async () => {
 .export-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 4px 0 8px;
 }
 .btn-export-primary {

@@ -185,11 +185,14 @@ onMounted(async () => {
   color: var(--color-white);
 }
 
-/* 三分类统计 */
+/* 四分类统计（3列会让第4张卡孤行，4列一行排齐） */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-md);
+}
+@media (max-width: 720px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* 对账明细 */
@@ -241,7 +244,7 @@ onMounted(async () => {
 .export-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 4px 0 8px;
 }
 .btn-export-primary {
