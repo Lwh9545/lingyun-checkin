@@ -7,14 +7,17 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src'),
+      '@shared': resolve(__dirname, 'shared')
     }
   },
   base: './',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false
+    sourcemap: false,
+    // exceljs 为按需动态 import（导出功能才加载），其独立 chunk 体积大属预期，抬警告线消除噪音
+    chunkSizeWarningLimit: 1024
   },
   server: {
     // 仅用于 `vite dev` 前端预览服务器，不影响 Electron（Electron 加载 dist/index.html，

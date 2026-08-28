@@ -1,6 +1,6 @@
 {
   "name": "lingyun-attendance",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "灵韵考勤打卡 - 桌面版",
   "main": "electron/main.js",
   "scripts": {
@@ -22,12 +22,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chart.js": "^4.5.1",
     "electron-updater": "^6.8.9",
+    "exceljs": "^4.4.0",
     "pinia": "^3.0.0",
+    "uuid": "^14.0.2",
     "vue": "^3.5.38",
-    "vue-router": "^5.0.0",
-    "xlsx": "^0.18.5"
+    "vue-router": "^5.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -37,7 +37,6 @@
     "electron": "^42.4.0",
     "electron-builder": "^26.15.3",
     "playwright": "^1.62.1",
-    "puppeteer": "^25.4.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.8"
