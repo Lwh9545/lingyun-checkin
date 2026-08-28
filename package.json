@@ -45,7 +45,7 @@
     "appId": "com.lingyun.attendance",
     "productName": "灵韵考勤打卡",
     "directories": {
-      "output": "release"
+      "output": "release/out"
     },
     "files": [
       "dist/**/*",

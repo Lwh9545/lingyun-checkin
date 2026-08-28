@@ -11,7 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
-const releaseDir = path.join(__dirname, '..', 'release')
+const releaseDir = path.join(__dirname, '..', 'release', 'out')
 const TARGET_EXT = new Set(['.exe', '.yml', '.blockmap'])
 
 function sha256(file) {
