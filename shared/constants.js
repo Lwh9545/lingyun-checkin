@@ -33,7 +33,9 @@ exports.DEFAULT_CONFIG = {
     OVERTIME_THRESHOLD: 30,
     AUTO_STARTUP: false,
     AUTO_CHECK_IN: false,
+    AUTO_CHECK_OUT: false,
     AUTO_CHECK_IN_OFFSET: 0,
+    AUTO_CHECK_OUT_OFFSET: 0,
     AUTO_CHECK_OUT_ON_SHUTDOWN: false,
     ENABLE_REST: true,
     REST_START: '12:00',
@@ -76,6 +78,8 @@ exports.STORAGE_KEYS = {
     OVERTIME_AFTER_END_THRESHOLD: 'overtimeAfterEndThreshold',
     CHECK_WINDOW_BEFORE: 'checkWindowBefore',
     LATE_THRESHOLD: 'lateThreshold',
+    SALARY_HOURLY_WAGE: 'salary_hourly_wage',
+    REIMBURSEMENT_RECORDS: 'reimbursement_records',
     APP_VERSION: 'app_version'
 };
 // ==================== 星期定义 ====================

@@ -1,3 +1,14 @@
+/* ⚠️  OBSOLETE — 入口已迁移！⚠️
+ * 本文件为早期入口遗留，package.json main 字段指向 electron/main.js，不会被执行。
+ * 保留仅用于回滚参考（git 历史可追溯），如要修改请改 electron/main.js + electron/modules/*。
+ * 删除此文件前请确保 team 中没人在用 old 启动脚本（例如 electron . --legacy-entry）。
+ */
+/* eslint-disable */
+if (true) {
+  console.error('[DEPRECATED] root/main.js is obsolete; electron/main.js is used by package.json. Exiting.');
+  process.exit(0);
+}
+// ==================== LEGACY CODE (NOT EXECUTED) ====================
 const { app, ipcMain, shell, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')

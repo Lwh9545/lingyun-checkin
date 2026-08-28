@@ -64,7 +64,7 @@ function createWindowManager(opts) {
         nodeIntegration: false,
         contextIsolation: true,
         preload: opts.preloadPath,
-        sandbox: false,
+        sandbox: true,
         spellcheck: false,
         enableWebSQL: false,
         defaultEncoding: 'UTF-8',

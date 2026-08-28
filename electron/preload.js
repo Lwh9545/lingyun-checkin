@@ -39,9 +39,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tray: {
     updateStatus: (status) => ipcRenderer.send('update-tray-status', status)
   },
-  onNotification: (callback) => {
-    ipcRenderer.on('show-notification', (event, data) => callback(data))
-  },
   onTriggerCheckIn: (callback) => {
     ipcRenderer.on('trigger-check-in', () => callback())
   },
@@ -60,17 +57,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeTriggerAutoCheckIn: () => {
     ipcRenderer.removeAllListeners('trigger-auto-check-in')
   },
-  onCheckAutoCheckIn: (callback) => {
-    ipcRenderer.on('check-auto-check-in', () => callback())
+  /** 主进程 auto-check.js#L295 在定时自动打卡完成后统一发送（含失败/跳过），渲染层可据此刷新 Dashboard/Toast */
+  onAutoCheckInDone: (callback) => {
+    ipcRenderer.on('trigger-auto-check-in-done', (event, result) => callback(result))
   },
-  removeCheckAutoCheckIn: () => {
-    ipcRenderer.removeAllListeners('check-auto-check-in')
-  },
-  onShutdownCheckOut: (callback) => {
-    ipcRenderer.on('shutdown-check-out', () => callback())
-  },
-  removeShutdownCheckOut: () => {
-    ipcRenderer.removeAllListeners('shutdown-check-out')
+  removeAutoCheckInDone: () => {
+    ipcRenderer.removeAllListeners('trigger-auto-check-in-done')
   },
   updater: {
     check: () => ipcRenderer.invoke('check-for-updates'),

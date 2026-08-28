@@ -6,10 +6,19 @@
 
 const fs = require('fs');
 const path = require('path');
+const { app } = require('electron');
 const { createLogger } = require('../../shared/logger.js');
+const v = require('./ipc-validate.js');
 const log = createLogger('backup');
 
 const BACKUP_KEEP_COUNT = 10;
+/** storage.json schema 白名单：攻击者构造的导入文件只允许写入这几个已知键，防止覆盖未知配置项（P0-2 防御） */
+const ALLOWED_IMPORT_KEYS = new Set([
+  'attendance_records', 'reimbursement_records', 'salary_hourly_wage',
+  'app_version', 'config', 'auto_startup_enabled', 'overtime_settings',
+  'checkin_window_settings', 'work_schedule', 'holiday_overrides',
+  'cloud_storage_root', 'notification_settings', 'theme_mode'
+]);
 
 /**
  * @param {{ storagePath: string, getStorageSync, setStorageSync, invalidateCache }} storage
@@ -135,31 +144,73 @@ function createBackupManager(storage, userDataPath, appVersion) {
 
   async function exportData(exportPath) {
     try {
-      if (!fs.existsSync(storagePath)) return false;
-      const data = JSON.parse(fs.readFileSync(storagePath, 'utf8'));
-      const exportContent = { version: appVersion, exportTime: new Date().toISOString(), data: data };
-      fs.writeFileSync(exportPath, JSON.stringify(exportContent, null, 2));
-      log.info('Data exported:', exportPath);
-      return true;
+      // P0-1 三重防御：禁止路径穿越 + 扩展名白名单 .json/.xlsx + 必须落在用户已知目录内
+      const pathCheck = v.assertAllowedUserPath(exportPath, { allowedExtRe: v.EXPORT_EXT_RE, app })
+      if (!pathCheck.ok) {
+        log.warn('export path rejected:', { reason: pathCheck.reason, exportPath })
+        return false
+      }
+      const targetPath = pathCheck.normalized
+      if (!fs.existsSync(storagePath)) return false
+      // 不要在日志里泄露真实用户名路径（隐私+安全双保险）
+      log.info('Data exported to sanitized path: allowed directory OK, ext OK')
+      const data = JSON.parse(fs.readFileSync(storagePath, 'utf8'))
+      const exportContent = { version: appVersion, exportTime: new Date().toISOString(), data: data }
+      fs.writeFileSync(targetPath, JSON.stringify(exportContent, null, 2))
+      return true
     } catch (error) {
-      log.error('Export failed:', error);
-      return false;
+      log.error('Export failed:', error)
+      return false
     }
   }
 
   async function importData(importPath) {
     try {
-      if (!fs.existsSync(importPath)) return { success: false, error: 'File not found' };
-      const importContent = JSON.parse(fs.readFileSync(importPath, 'utf8'));
-      if (!importContent.data) return { success: false, error: 'Invalid import file format' };
-      if (fs.existsSync(storagePath)) await createAutoBackup();
-      fs.writeFileSync(storagePath, JSON.stringify(importContent.data, null, 2));
-      if (storage.invalidateCache) storage.invalidateCache();
-      log.info('Data imported successfully');
-      return { success: true, version: importContent.version, time: importContent.exportTime };
+      // P0-2 四重防御：路径校验 + 扩展名仅 .json + 文件 ≤5MB + schema key 白名单 + 失败不写存储
+      const pathCheck = v.assertAllowedUserPath(importPath, { allowedExtRe: /\.json$/i, app })
+      if (!pathCheck.ok) {
+        log.warn('import path rejected:', pathCheck.reason)
+        return { success: false, error: `Invalid path: ${pathCheck.reason}` }
+      }
+      const safePath = pathCheck.normalized
+      if (!fs.existsSync(safePath)) return { success: false, error: 'File not found' }
+      const stat = fs.statSync(safePath)
+      if (!stat.isFile()) return { success: false, error: 'Not a regular file' }
+      if (stat.size > v.MAX_IMPORT_BYTES) {
+        return { success: false, error: `File too large: ${stat.size} bytes (max ${v.MAX_IMPORT_BYTES})` }
+      }
+      // parse 异常直接抛到外层，不会触发写存储
+      const importContent = JSON.parse(fs.readFileSync(safePath, 'utf8'))
+      if (!importContent || typeof importContent.data !== 'object' || importContent.data === null) {
+        return { success: false, error: 'Invalid import file format: missing .data object' }
+      }
+      // schema 白名单过滤：只保留 ALLOWED_IMPORT_KEYS 中存在的键，其余全部丢弃并记警告
+      const cleaned = {}
+      const dropped = []
+      for (const k of Object.keys(importContent.data)) {
+        if (ALLOWED_IMPORT_KEYS.has(k)) cleaned[k] = importContent.data[k]
+        else dropped.push(k)
+      }
+      if (dropped.length) log.warn('import: dropped unknown keys:', dropped)
+      if (Object.keys(cleaned).length === 0) {
+        return { success: false, error: 'No allowed keys in import data (empty after sanitize)' }
+      }
+      // 防御 DoS：JSON 最大对象深度限制 20 层（深嵌套爆栈）
+      try { JSON.stringify(cleaned); function depth(o, d=0){ if(d>20) throw new Error('too deep'); if(typeof o !== 'object' || o===null) return; for(const v of Object.values(o)) depth(v, d+1); }; depth(cleaned) }
+      catch (e) { return { success: false, error: `Import object invalid: ${e.message}` } }
+      if (fs.existsSync(storagePath)) await createAutoBackup()
+      fs.writeFileSync(storagePath, JSON.stringify(cleaned, null, 2))
+      if (storage.invalidateCache) storage.invalidateCache()
+      log.info('Data imported successfully:', {
+        version: importContent.version,
+        time: importContent.exportTime,
+        keys: Object.keys(cleaned),
+        droppedCount: dropped.length
+      })
+      return { success: true, version: importContent.version, time: importContent.exportTime, droppedKeys: dropped }
     } catch (error) {
-      log.error('Import failed:', error);
-      return { success: false, error: error.message };
+      log.error('Import failed:', error)
+      return { success: false, error: error.message || 'Unknown error' }
     }
   }
 

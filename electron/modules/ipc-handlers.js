@@ -74,12 +74,12 @@ function registerBaseIpcHandlers(deps) {
       if (!fs.existsSync(backupDir)) { fs.mkdirSync(backupDir, { recursive: true }) }
       const records = getStorageSync('attendance_records', [])
       const latestBackup = await getBackupList()
+      // P1-5 去本地路径：渲染端 Settings.vue 仅展示 totalRecords/backupCount/lastBackup，不依赖路径
+      // 移除 dataPath/backupPath 绝对路径返，避免泄露 Windows 用户名/userData 目录结构
       return {
         totalRecords: records.length,
         backupCount: latestBackup.length,
-        lastBackup: latestBackup.length > 0 ? latestBackup[0].modified : null,
-        dataPath: storage.storagePath,
-        backupPath: backupDir
+        lastBackup: latestBackup.length > 0 ? latestBackup[0].modified : null
       }
     } catch (error) {
       log.error('get-data-stats failed:', error)

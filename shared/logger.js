@@ -39,7 +39,7 @@ function initLogger(logDir, minLevel = 'INFO') {
       const fp = path.join(logDir, f);
       if (fs.statSync(fp).mtimeMs < cutoff) fs.unlinkSync(fp);
     });
-  } catch (_) { /* ignore cleanup errors */ }
+  } catch (_) { try { console.warn('[logger] cleanup rotate failed (disk permission or locked)'); } catch(__){} }
 }
 
 /**
@@ -64,7 +64,7 @@ function createLogger(tag) {
     if (_logFilePath) {
       try {
         fs.appendFileSync(_logFilePath, `[${ts}] [${label}] [${tag}] ${message}\n`);
-      } catch (_) { /* ignore write errors */ }
+      } catch (_) { try { console.warn(`[logger] write failed for ${label}: disk full or permission denied`); } catch(__){} }
     }
   }
 

@@ -159,14 +159,14 @@ function createStorage(userDataPath) {
             _isEncrypted = false;
             log.warn('FM-006 self-heal: recovered storage from', name);
             return _dataCache;
-          } catch (e) { /* 该备份也坏，尝试更早一份 */ }
+          } catch (e) { log.warn('FM-006: backup entry corrupted, trying earlier one', name, e.message); continue; }
         }
       }
       // 无可用备份：隔离坏文件保留证据
       try {
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
         fs.renameSync(storagePath, path.join(userDataPath, `storage.json.corrupt-${stamp}`));
-      } catch (e) { /* 文件可能不存在 */ }
+      } catch (e) { log.warn('quarantine rename failed (file may be locked):', storagePath, e.message); }
       log.warn('Corrupt storage quarantined, starting fresh (no usable backup)');
     } catch (e) {
       log.error('Recovery failed:', e);
@@ -231,7 +231,7 @@ function createStorage(userDataPath) {
       fs.copyFileSync(storagePath, path.join(backupDir, todayBackupName(today)));
       const { remove } = rotateBackups([...existing, todayBackupName(today)], 7);
       for (const f of remove) {
-        try { fs.unlinkSync(path.join(backupDir, f)); } catch (e) { log.warn('rotate unlink failed:', f); }
+        try { fs.unlinkSync(path.join(backupDir, f)); } catch (e) { log.warn('rotate unlink failed, will retry next rotation:', f, e.message); }
       }
       log.info('auto-backup created:', todayBackupName(today));
     } catch (e) {
