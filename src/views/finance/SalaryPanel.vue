@@ -77,6 +77,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAttendanceStore } from '../../stores/attendance'
 import { isRestDay, getHolidayInfo } from '../../utils/holidays'
@@ -98,7 +99,7 @@ const toast = useToast()
 const router = useRouter()
 
 const attendanceStore = useAttendanceStore()
-const { records, loading } = attendanceStore
+const { records, loading } = storeToRefs(attendanceStore) // storeToRefs 保持响应性（同首页空白根因的预防）
 
 // 月份由 Finance 头部统一提供
 const selectedYear = computed(() => props.year)

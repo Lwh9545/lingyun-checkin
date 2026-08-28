@@ -106,6 +106,7 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref, computed } from "vue"
+import { storeToRefs } from "pinia"
 import { useAttendanceStore } from "../stores/attendance"
 import { getStatusText } from "../utils/attendanceUtils"
 import { useKeyboard } from "../composables/useKeyboard"
@@ -115,7 +116,7 @@ import { createLogger } from "../utils/logger"
 
 const log = createLogger('checkin-view')
 const attendanceStore = useAttendanceStore()
-const { loading } = attendanceStore
+const { loading } = storeToRefs(attendanceStore) // storeToRefs 保持响应性；直接解构会拿到死快照（骨架永挂=首页空白的根因）
 const toast = useToast()
 const router = useRouter()
 const checkSuccess = ref(false)

@@ -273,13 +273,14 @@
 import { ref, onMounted, reactive, computed } from "vue"
 import { useAttendanceStore } from "../stores/attendance"
 import { useToast } from "../composables/useToast"
+import { storeToRefs } from "pinia"
 import { useSettingsValidation } from "../composables/useSettingsValidation"
 import { useDataManagement } from "../composables/useDataManagement"
 import { DEFAULT_CONFIG, STORAGE_KEYS } from "../utils/constants"
 import { getStorage, setStorage } from "../utils/storageUtils"
 
 const store = useAttendanceStore()
-const { loading } = store
+const { loading } = storeToRefs(store) // storeToRefs 保持响应性（同 Checkin 首页空白根因的预防）
 const toast = useToast()
 
 // ── 设置项 schema ──
