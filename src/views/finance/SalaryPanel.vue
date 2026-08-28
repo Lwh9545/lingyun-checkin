@@ -114,7 +114,7 @@ const classifier = (date) => classifyDay(date, {
   isRestDay: isRestDay(date)
 })
 
-const monthRecords = computed(() => records.filter(r => r.date.startsWith(monthStr.value)))
+const monthRecords = computed(() => records.value.filter(r => r.date.startsWith(monthStr.value)))
 const detail = computed(() => calculateOvertimeDetail(monthRecords.value, { hourlyWage: hourlyWage.value }, classifier))
 
 /** 导出 Excel 对账单（明细 + 汇总双 sheet，与考勤记录导出同模板） */
