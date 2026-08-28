@@ -83,8 +83,10 @@ function isTimeToCheck(targetTime) {
  * @returns 是否为工作日
  */
 function isWorkDay(workDays) {
-    if (!workDays || !Array.isArray(workDays)) {
-        return true;
+    // v2.1 统一语义：非法形态回退默认工作日（与 src/utils/attendanceUtils.isWorkDay 一致），
+    // 禁止静默返回 true/false 造成判定失效
+    if (!Array.isArray(workDays) || workDays.length === 0) {
+        workDays = [1, 2, 3, 4, 5];
     }
     return workDays.includes(new Date().getDay());
 }

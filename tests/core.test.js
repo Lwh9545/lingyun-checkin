@@ -237,6 +237,27 @@ describe('checkAttendanceStatus', () => {
     expect(checkAttendanceStatus('下班', '18:31', config)).toBe('overtime')
   })
 
+  // ═ v2.1 修复回归：加班事实不得被 overtimeOnWorkday 洗白 ═
+  it('晚上 20:00 打下班卡 = 加班（即使 overtimeOnWorkday=false，记录层如实记录）', () => {
+    const noPayOvertime = { ...config, overtimeOnWorkday: false }
+    expect(checkAttendanceStatus('下班', '20:00', noPayOvertime)).toBe('overtime')
+  })
+
+  it('晚上 20:00 打上班卡 = 旷工（超午休阈值，绝不能显示正常）', () => {
+    expect(checkAttendanceStatus('上班', '20:00', config)).toBe('absent')
+  })
+
+  // ═ v2.1 修复回归：isWorkDay 非法形态回退默认工作日，禁止静默失效 ═
+  it('isWorkDay(损坏的字符串配置) 不再返回 false（回退默认工作日）', () => {
+    const corrupted = '1,2,3,4,5'  // 存储损坏成字符串的形态
+    expect(isWorkDay(corrupted)).toBe(isWorkDay([1, 2, 3, 4, 5]))
+    expect(isWorkDay(null)).toBe(isWorkDay([1, 2, 3, 4, 5]))
+  })
+
+  it('isWorkDay(空数组) 回退默认工作日', () => {
+    expect(isWorkDay([])).toBe(isWorkDay([1, 2, 3, 4, 5]))
+  })
+
   // ⚠️ 此测试依赖当前实际星期——在周一~周五运行通过
   // 如需稳定测试，建议 mock Date
   it.skip('周末打卡 = 加班（如果 overtimeOnNonWorkday 启用）', () => {

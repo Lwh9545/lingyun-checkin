@@ -71,11 +71,11 @@
         <button
           class="check-button"
           :class="{
-            disabled: attendanceStore.isChecking,
+            disabled: attendanceStore.isChecking || !attendanceStore.canCheck,
             success: checkSuccess,
             'auto-success': autoCheckInSuccess,
           }"
-          :disabled="attendanceStore.isChecking"
+          :disabled="attendanceStore.isChecking || !attendanceStore.canCheck"
           @click="handleCheck"
         >
           <span class="check-label">
@@ -95,6 +95,9 @@
       </div>
       <div class="kbd-row" v-if="attendanceStore.canCheck">
         按 <kbd>Enter</kbd> 或 <kbd>Space</kbd> 快速打卡
+      </div>
+      <div class="kbd-row window-warn" v-if="!attendanceStore.canCheck && !attendanceStore.todayRecords?.checkOut">
+        当前不在打卡时间段 · 补录请到仪表盘编辑记录
       </div>
     </div>
     </template>
@@ -339,6 +342,7 @@ onUnmounted(() => {
   font-size: 12px; color: var(--color-text-tertiary);
   display: flex; align-items: center; gap: 6px;
 }
+.window-warn { color: var(--color-warning, #b45309); }
 kbd {
   font-family: var(--font-mono); font-size: 11px;
   padding: 2px 6px; border-radius: 6px;

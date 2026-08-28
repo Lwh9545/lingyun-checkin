@@ -43,11 +43,10 @@ export function getEffectiveEndTime(config: Partial<AppConfig>): string {
 }
 
 export function isWorkDay(workDays?: number[] | null): boolean {
-  if (workDays === null || workDays === undefined) {
-    workDays = DEFAULT_CONFIG.WORK_DAYS
-  }
-  const today = getDayOfWeek()
-  return Array.isArray(workDays) && workDays.includes(today)
+  // v2.1 修复：非法形态（非数组/空数组/损坏的存储值）回退默认工作日，
+  // 禁止「配置异常 → 全部判正常」的静默失效（旧实现返回 false 导致所有打卡显示正常）
+  const days = Array.isArray(workDays) && workDays.length > 0 ? workDays : DEFAULT_CONFIG.WORK_DAYS
+  return days.includes(getDayOfWeek())
 }
 
 /**
@@ -95,11 +94,9 @@ export function checkAttendanceStatus(type: CheckType, timeString: string, confi
     return checkCheckInStatus(currentMinutes, finalConfig)
   }
 
-  const checkoutStatus = checkCheckOutStatus(currentMinutes, finalConfig)
-  if (checkoutStatus === 'overtime' && !finalConfig.overtimeOnWorkday) {
-    return 'normal'
-  }
-  return checkoutStatus
+  // v2.1 修复：加班事实如实记录（20:00 打下班卡必须显示加班，不得洗白为正常）。
+  // 是否计入加班费由工资计算层按 overtimeOnWorkday 决定，与记录层解耦。
+  return checkCheckOutStatus(currentMinutes, finalConfig)
 }
 
 /**

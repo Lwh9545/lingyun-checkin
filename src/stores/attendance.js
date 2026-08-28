@@ -57,10 +57,17 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return '已完成打卡'
   })
 
+  // 是否在当前类型的打卡窗口内（每秒随 currentTime 重算）
+  const inCheckWindow = computed(() => {
+    void currentTime.value
+    const type = todayRecords.value?.checkIn ? '下班' : '上班'
+    return isInCheckWindow(type, getConfig())
+  })
+
   const canCheck = computed(() => {
-    if (!todayRecords.value?.checkIn) return true
-    if (!todayRecords.value?.checkOut) return true
-    return false
+    if (todayRecords.value?.checkIn && todayRecords.value?.checkOut) return false
+    // 时间窗守卫（v2.1）：未到/超出打卡窗口不开放手动打卡（补录用仪表盘的添加/编辑）
+    return inCheckWindow.value
   })
 
   const displayStartTime = computed(() => workStartTime.value)
@@ -341,6 +348,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     isCheckedIn,
     checkText,
     canCheck,
+    inCheckWindow,
     displayStartTime,
     displayEndTime,
     todayWorkDuration,

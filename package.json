@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:dead": "node scripts/check-dead-code.js",
     "start": "electron .",
     "electron:dev": "vite build && electron .",
     "build:win": "vite build && electron-builder --win --publish=never && node scripts/hash-manifest.js",
