@@ -20,7 +20,10 @@ const STRICT_CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "connect-src 'self' https://timor.tech https://*.timor.tech",
-  "worker-src 'self' blob:"
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'"
 ].join('; ');
 
 /**
@@ -75,6 +78,20 @@ function createWindowManager(opts) {
     });
 
     mainWindow.setMenu(null);
+
+    // 安全基线：拦截 window.open 与跨源导航（Electron 官方 Security 建议）
+    // 应用全部页面均在 file:// 内；https 外链转交系统浏览器，其余一律拒绝。
+    // 当前 UI 无外链，此为纵深防御——防止未来引入外链时被钓鱼窗口/跨源导航劫持。
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+      if (/^https:\/\//i.test(url)) {
+        const { shell } = require('electron');
+        shell.openExternal(url);
+      }
+      return { action: 'deny' };
+    });
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('file://')) event.preventDefault();
+    });
 
     mainWindow.once('ready-to-show', () => {
       if (!process.argv.includes('--minimized')) mainWindow.show();
