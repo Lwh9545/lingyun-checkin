@@ -119,7 +119,12 @@ export function useDataManagement(reloadRecords: () => Promise<void>, toast: Toa
       if (window.electronAPI?.updater?.getEncryptionStatus) {
         encryptionStatus.value = await window.electronAPI.updater.getEncryptionStatus()
       }
-    } catch { /* 非 Electron 环境忽略 */ }
+    } catch (err) {
+      // 非 Electron 环境（Vite dev SSR 或纯 Web 构建）下 electronAPI 不存在，属于正常降级
+      if (typeof console !== 'undefined') {
+        console.debug('[useDataManagement] electronAPI unavailable in current env; downgrade to web-only features')
+      }
+    }
   }
 
   function getEncryptionHint(): string {

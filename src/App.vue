@@ -3,10 +3,9 @@
     <!-- 侧边导航栏 -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="12" fill="url(#logoGrad)"/>
-          <path d="M12 22l5 4 11-12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="16" fill="var(--color-primary)"/>
+          <path d="M9 18l4 3 10-11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
 
@@ -22,6 +21,14 @@
         <router-link to="/records" class="nav-item" active-class="active" title="记录">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           <span class="nav-label">记录</span>
+        </router-link>
+        <router-link to="/salary" class="nav-item" active-class="active" title="工资">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+          <span class="nav-label">工资</span>
+        </router-link>
+        <router-link to="/reimbursement" class="nav-item" active-class="active" title="报销">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 4-4V2z"/><path d="M8 10h8M8 14h5"/></svg>
+          <span class="nav-label">报销</span>
         </router-link>
         <router-link to="/cloud" class="nav-item" active-class="active" title="网盘">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -42,7 +49,7 @@
     <div class="main-wrapper">
       <div v-if="globalError" class="error-bar">
         <span class="error-bar-text">{{ globalError.message }}</span>
-        <button class="error-bar-dismiss" @click="globalError = null">×</button>
+        <button class="error-bar-dismiss" @click="globalError = null" aria-label="关闭错误提示">×</button>
       </div>
       <main class="main">
         <router-view v-slot="{ Component }">
@@ -166,14 +173,14 @@ onUnmounted(() => {
 }
 
 .sidebar-logo {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   margin-bottom: 8px;
   flex-shrink: 0;
 }
 .sidebar-logo svg {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: block;
 }
 
@@ -262,7 +269,7 @@ onUnmounted(() => {
   font-size: 13px;
   flex-shrink: 0;
 }
-.error-bar-text { flex: 1; }
+.error-bar-text { flex: 1; line-height: 1; }
 .error-bar-dismiss {
   background: none;
   border: none;
@@ -270,7 +277,12 @@ onUnmounted(() => {
   color: #991b1b;
   cursor: pointer;
   padding: 0 4px;
-  line-height: 1;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .main {

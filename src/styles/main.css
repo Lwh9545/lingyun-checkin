@@ -70,6 +70,51 @@
   /* === 字体 === */
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --font-mono: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+
+  /* === 字号 (P1-9 字号硬编码抽 token) === */
+  --text-xs: 11px;          /* 11px 极小辅助文字 */
+  --text-sm: 12px;          /* 12px 辅助文字 */
+  --text-base-sm: 13px;     /* 13px 次要正文（介于 sm / base） */
+  --text-base: 14px;        /* 14px 标准正文 */
+  --text-md: 15px;          /* 15px 强调正文 */
+  --text-lg: 16px;          /* 16px 小标题 */
+  --text-lg-plus: 17px;     /* 17px 小标题强调 */
+  --text-xl: 18px;          /* 18px 卡片标题 */
+  --text-xl-plus: 20px;     /* 20px 大卡片标题 */
+  --text-2xl: 22px;         /* 22px 页面副标题 */
+  --text-2xl-plus: 24px;    /* 24px 页面标题 */
+  --text-3xl: 28px;         /* 28px 巨型数字 KPI */
+  --text-display: 40px;     /* 40px 主打卡时间 */
+
+  /* === 补充语义色 (P1-8 色值硬编码抽 token) === */
+  --color-white: #ffffff;                          /* 纯白：卡片背景 / 前景 on 深 */
+  --color-white-strong: rgba(255, 255, 255, 0.95); /* 近白前景 */
+  --color-border-muted: #d1d5db;                   /* gray-300：禁用/占位灰条 */
+  --color-danger-strong: #b91c1c;                  /* red-700：危险前景强调 */
+  --color-pink: #ec4899;                           /* pink-500：粉色强调 */
+  --color-bg-mask: rgba(0, 0, 0, 0.5);             /* 标准 modal 遮罩 */
+  --color-bg-mask-secondary: rgba(15, 23, 42, 0.3);/* slate-900 半透遮罩 */
+  --color-bg-card-soft: rgba(255, 255, 255, 0.85); /* 毛玻璃卡片 */
+  --color-bg-card-solid: rgba(255, 255, 255, 0.9); /* 近实卡片 */
+  --color-bg-card-thin: rgba(255, 255, 255, 0.5);  /* 半透卡片 */
+  --color-primary-bg-soft: rgba(99, 102, 241, 0.04);   /* primary hover 极淡 */
+  --color-primary-bg-tint: rgba(99, 102, 241, 0.03);   /* primary 最淡 */
+  --color-primary-bg-hover: rgba(99, 102, 241, 0.08);  /* primary hover 淡 */
+  --color-danger-bg-soft: rgba(239, 68, 68, 0.08);     /* danger 淡底 */
+  --color-danger-bg-light: rgba(254, 226, 226, 0.4);   /* danger-light 半透 */
+  --color-danger-bg-light-solid: rgba(254, 226, 226, 0.9);
+  --color-danger-border: rgba(220, 38, 38, 0.3);       /* red-600 边框半透 */
+  --color-danger-glow: rgba(239, 68, 68, 0.35);        /* danger 发光阴影 */
+  --color-warning-shadow: rgba(202, 138, 4, 0.35);     /* warning 发光阴影 */
+
+  /* === 层叠顺序 (P0-10b 数字军备竞赛治理) === */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-panel: 500;
+  --z-modal: 1000;
+  --z-popover: 1100;
+  --z-toast: 1200;
+  --z-topmost: 9999;
 }
 
 /* === 暗色模式 === */
@@ -108,6 +153,29 @@
   --color-border: #334155;
   --color-border-light: #1e293b;
   --color-divider: #1e293b;
+
+  /* 暗色模式 - P1-9 字号令牌无需改值（px 绝对值） */
+
+  /* 暗色模式 - P1-8 颜色补充令牌同步 */
+  --color-white: #f1f5f9;                          /* slate-100：暗色「白」前景 */
+  --color-white-strong: rgba(241, 245, 249, 0.95); /* 近白前景暗色版 */
+  --color-border-muted: #475569;                   /* slate-600：暗色灰条 */
+  --color-danger-strong: #fecaca;                  /* red-200：暗色 danger 前景强 */
+  --color-pink: #f472b6;                           /* pink-400：暗色粉 */
+  --color-bg-mask: rgba(0, 0, 0, 0.7);             /* modal 遮罩 暗色更深 */
+  --color-bg-mask-secondary: rgba(0, 0, 0, 0.5);
+  --color-bg-card-soft: rgba(30, 41, 59, 0.85);    /* slate-800 半透 */
+  --color-bg-card-solid: rgba(30, 41, 59, 0.92);   /* slate-800 近实 */
+  --color-bg-card-thin: rgba(30, 41, 59, 0.55);    /* slate-800 半透 */
+  --color-primary-bg-soft: rgba(129, 140, 248, 0.08);
+  --color-primary-bg-tint: rgba(129, 140, 248, 0.05);
+  --color-primary-bg-hover: rgba(129, 140, 248, 0.14);
+  --color-danger-bg-soft: rgba(248, 113, 113, 0.10);
+  --color-danger-bg-light: rgba(127, 29, 29, 0.5);
+  --color-danger-bg-light-solid: rgba(127, 29, 29, 0.9);
+  --color-danger-border: rgba(248, 113, 113, 0.45);
+  --color-danger-glow: rgba(248, 113, 113, 0.5);
+  --color-warning-shadow: rgba(251, 191, 36, 0.5);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -207,6 +275,13 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px var(--color-primary-bg);
 }
 
+/* 键盘操作焦点可见（鼠标点击不触发）：可访问性兜底，组件级 focus-visible 样式可覆盖 */
+:where(button, [role='switch'], a, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .tag {
   display: inline-block;
   padding: 4px 12px;
@@ -228,7 +303,7 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
 }
 .modal-content {
   background: var(--color-bg-card);
@@ -246,3 +321,35 @@ input:focus, select:focus {
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
+
+/* === 触控最小尺寸 (WCAG 2.2 Target Size AA ≥44×44) === */
+:root {
+  --touch-min: 44px;
+}
+
+/* === 骨架屏 shimmer (P0-7 6 视图通用) === */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary) 0px,
+    var(--color-bg-card) 40px,
+    var(--color-bg-secondary) 80px
+  );
+  background-size: 800px 100%;
+  border-radius: var(--radius-md);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 16px;
+}
+.skeleton-line  { height: 14px; width: 100%; }
+.skeleton-line.short { width: 40%; }
+.skeleton-line.mid   { width: 65%; }
+.skeleton-card  { height: 96px; width: 100%; }

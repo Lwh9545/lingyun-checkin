@@ -20,9 +20,9 @@ afterAll(() => {
   vi.useRealTimers()
 })
 
-// ═══════════════════════════════════════════
+// ═
 // mergeRecords - 去重合并
-// ═══════════════════════════════════════════
+// ═
 describe('mergeRecords', () => {
   it('空数组返回空数组', () => {
     expect(mergeRecords([])).toEqual([])
@@ -79,9 +79,9 @@ describe('mergeRecords', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // 时间工具
-// ═══════════════════════════════════════════
+// ═
 describe('time utilities', () => {
   it('timeToMinutes 正常解析', () => {
     expect(timeToMinutes('09:00')).toBe(540)
@@ -121,9 +121,9 @@ describe('time utilities', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // calculateEffectiveDuration - 工时计算
-// ═══════════════════════════════════════════
+// ═
 describe('calculateEffectiveDuration', () => {
   const defaultConfig = {
     enableRest: false, restStart: '12:00', restEnd: '14:00',
@@ -194,9 +194,9 @@ describe('calculateEffectiveDuration', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // checkAttendanceStatus - 打卡状态判定
-// ═══════════════════════════════════════════
+// ═
 describe('checkAttendanceStatus', () => {
   const config = {
     workStartTime: '09:00', workEndTime: '18:00',
@@ -248,9 +248,9 @@ describe('checkAttendanceStatus', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // isInCheckWindow - 打卡窗口
-// ═══════════════════════════════════════════
+// ═
 describe('isInCheckWindow', () => {
   const config = {
     workStartTime: '09:00', workEndTime: '18:00',
@@ -272,9 +272,9 @@ describe('isInCheckWindow', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // mergeRecords 增量测试
-// ═══════════════════════════════════════════
+// ═
 describe('mergeRecords 补充测试', () => {
   it('过滤非对象记录', () => {
     const records = ['string', 123, true, { date: '2026-06-01', checkIn: '09:00' }]
@@ -314,9 +314,9 @@ describe('mergeRecords 补充测试', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // 考勤状态工具函数
-// ═══════════════════════════════════════════
+// ═
 describe('attendanceUtils 状态工具', () => {
   it('getStatusValue / getStatusText 互逆', () => {
     expect(getStatusText('normal')).toBe('正常')
@@ -333,9 +333,9 @@ describe('attendanceUtils 状态工具', () => {
   })
 })
 
-// ═══════════════════════════════════════════
+// ═
 // holidays 工具函数
-// ═══════════════════════════════════════════
+// ═
 describe('holidays 节假日', () => {
   it('getHolidayName 查询', () => {
     expect(getHolidayName('2025-01-01')).toBe('元旦')

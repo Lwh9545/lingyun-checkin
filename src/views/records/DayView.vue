@@ -3,14 +3,14 @@
     <!-- 日期导航器 -->
     <div class="day-header-card glass-card-strong fade-in-scale" style="animation-delay:0.05s">
       <div class="date-navigator">
-        <button class="nav-btn" @click="navigateSelectedDay(-1)" :disabled="!hasPrevDay">
+        <button class="nav-btn" @click="navigateSelectedDay(-1)" :disabled="!hasPrevDay" aria-label="上一天">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="current-date-display">
           <span class="date-main">{{ displaySelectedDate }}</span>
           <span class="date-today-btn" @click="jumpToToday">今天</span>
         </div>
-        <button class="nav-btn" @click="navigateSelectedDay(1)" :disabled="!hasNextDay">
+        <button class="nav-btn" @click="navigateSelectedDay(1)" :disabled="!hasNextDay" aria-label="下一天">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -28,7 +28,7 @@
           <span v-if="!isCalendarExpanded">日视图</span>
           <span v-else>收起月历</span>
         </span>
-        <button class="expand-toggle" @click="toggleCalendarExpand" :title="isCalendarExpanded ? '收起' : '展开月历'">
+        <button class="expand-toggle" @click="toggleCalendarExpand" :title="isCalendarExpanded ? '收起' : '展开月历'" :aria-label="isCalendarExpanded ? '收起月历' : '展开月历'">
           <svg v-if="!isCalendarExpanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="20"/></svg>
           <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
@@ -62,14 +62,14 @@
       <!-- 月视图 -->
       <template v-else>
         <div class="month-nav">
-          <button class="mini-nav-btn" @click="navMonthCalendar(-1)">
+          <button class="mini-nav-btn" @click="navMonthCalendar(-1)" aria-label="月历上一个月">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <span class="month-nav-title">{{ monthCalendarTitle }}</span>
-          <button class="mini-nav-btn" @click="navMonthCalendar(1)">
+          <button class="mini-nav-btn" @click="navMonthCalendar(1)" aria-label="月历下一个月">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
-          <button class="mini-nav-btn today-btn" @click="jumpMonthCalendarToToday" title="回到今天">
+          <button class="mini-nav-btn today-btn" @click="jumpMonthCalendarToToday" title="回到今天" aria-label="回到今天">
             <span>今天</span>
           </button>
         </div>
@@ -338,15 +338,18 @@ function jumpMonthCalendarToToday() {
 }
 
 .nav-btn {
-  width: 28px; height: 28px;
-  border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.85);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-card-soft);
   color: var(--color-text-secondary);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0;
-  transition: all var(--transition-fast);
+  cursor: pointer; flex-shrink: 0; transition: all var(--transition-fast);
 }
-.nav-btn:hover:not(:disabled) { background: #fff; color: var(--color-primary); box-shadow: var(--shadow-sm); }
+.nav-btn:hover:not(:disabled) { background: var(--color-white); color: var(--color-primary); box-shadow: var(--shadow-sm); }
 .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .nav-btn svg { width: 14px; height: 14px; }
 
@@ -363,7 +366,7 @@ function jumpMonthCalendarToToday() {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 16px; min-height: 32px; min-width: 80px;
   border-radius: 999px; border: none;
-  background: var(--color-primary); color: #fff;
+  background: var(--color-primary); color: var(--color-white);
   font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   cursor: pointer; transition: all var(--transition-fast);
 }
@@ -401,7 +404,7 @@ function jumpMonthCalendarToToday() {
 
 .expand-toggle {
   width: 30px; height: 30px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.85); color: var(--color-text-secondary);
+  background: var(--color-bg-card-soft); color: var(--color-text-secondary);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all var(--transition-fast);
 }
@@ -418,9 +421,9 @@ function jumpMonthCalendarToToday() {
   padding: 8px 2px 10px; border-radius: var(--radius-md);
   cursor: pointer; transition: all var(--transition-base);
 }
-.day-cell:hover { background: rgba(99, 102, 241, 0.08); }
+.day-cell:hover { background: var(--color-primary-bg-hover); }
 .day-cell.selected { background: var(--color-primary-bg); }
-.day-cell.today .day-ring { background: var(--color-primary); box-shadow: 0 2px 8px var(--color-primary-glow); color: #fff; }
+.day-cell.today .day-ring { background: var(--color-primary); box-shadow: 0 2px 8px var(--color-primary-glow); color: var(--color-white); }
 .day-cell.today.selected .day-ring { background: var(--color-primary-dark); box-shadow: 0 2px 8px var(--color-primary-glow), 0 0 0 3px var(--color-primary-light); }
 
 .day-ring {
@@ -430,12 +433,12 @@ function jumpMonthCalendarToToday() {
   font-weight: 600; font-size: 15px; color: var(--color-text-primary);
 }
 .day-cell.weekend .day-ring { color: var(--color-text-secondary); }
-.day-cell.weekend.today .day-ring { color: #fff; }
-.day-cell.selected .day-ring { background: var(--color-primary); color: #fff; box-shadow: 0 2px 8px var(--color-primary-glow); }
+.day-cell.weekend.today .day-ring { color: var(--color-white); }
+.day-cell.selected .day-ring { background: var(--color-primary); color: var(--color-white); box-shadow: 0 2px 8px var(--color-primary-glow); }
 .day-cell.holiday .day-ring { color: var(--color-danger); }
-.day-cell.holiday.selected .day-ring { color: #fff; background: var(--color-danger); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35); }
+.day-cell.holiday.selected .day-ring { color: var(--color-white); background: var(--color-danger); box-shadow: 0 2px 8px var(--color-danger-glow); }
 .day-cell.makeup .day-ring { color: var(--color-warning); }
-.day-cell.makeup.selected .day-ring { color: #fff; background: var(--color-warning); box-shadow: 0 2px 8px rgba(202, 138, 4, 0.35); }
+.day-cell.makeup.selected .day-ring { color: var(--color-white); background: var(--color-warning); box-shadow: 0 2px 8px var(--color-warning-shadow); }
 
 .day-tag { font-size: 10px; line-height: 1; color: var(--color-danger); font-weight: 500; }
 .day-tag.makeup { color: var(--color-warning); }
@@ -447,14 +450,19 @@ function jumpMonthCalendarToToday() {
 /* === 月视图 === */
 .month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .mini-nav-btn {
-  width: 28px; height: 28px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.85); color: var(--color-text-secondary);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min); height: var(--touch-min);
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-card-soft);
+  color: var(--color-text-secondary);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all var(--transition-fast);
 }
 .mini-nav-btn:hover { background: var(--color-primary-bg); color: var(--color-primary); }
 .mini-nav-btn svg { width: 14px; height: 14px; }
-.mini-nav-btn.today-btn { width: auto; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; margin-left: auto; }
+.mini-nav-btn.today-btn { width: auto; min-height: var(--touch-min); padding: 0 14px; border-radius: 999px; font-size: var(--text-sm); font-weight: 500; margin-left: auto; }
 .month-nav-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
 
 .month-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 6px; }
@@ -468,18 +476,18 @@ function jumpMonthCalendarToToday() {
   cursor: pointer; transition: all var(--transition-fast);
   position: relative; min-height: 52px;
 }
-.month-cell:hover { background: rgba(99, 102, 241, 0.08); }
+.month-cell:hover { background: var(--color-primary-bg-hover); }
 .month-cell.other-month { opacity: 0.3; }
-.month-cell.today .month-day-num { background: var(--color-primary); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.month-cell.today .month-day-num { background: var(--color-primary); color: var(--color-white); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
 .month-cell.selected { background: var(--color-primary-bg); }
 .month-cell.weekend .month-day-num { color: var(--color-text-secondary); }
-.month-cell.weekend.today .month-day-num { color: #fff; background: var(--color-primary); }
+.month-cell.weekend.today .month-day-num { color: var(--color-white); background: var(--color-primary); }
 .month-cell.holiday .month-day-num { color: var(--color-danger); font-weight: 700; }
-.month-cell.holiday.today .month-day-num { color: #fff; background: var(--color-danger); }
+.month-cell.holiday.today .month-day-num { color: var(--color-white); background: var(--color-danger); }
 .month-cell.makeup .month-day-num { color: var(--color-warning); font-weight: 600; }
 
 .month-day-num { font-size: 13px; font-weight: 500; color: var(--color-text-primary); line-height: 1; padding: 4px; }
-.month-cell.selected:not(.today) .month-day-num { background: var(--color-primary); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.month-cell.selected:not(.today) .month-day-num { background: var(--color-primary); color: var(--color-white); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
 
 .month-tag { font-size: 9px; line-height: 1; color: var(--color-danger); font-weight: 500; }
 .month-tag.makeup { color: var(--color-warning); }
@@ -507,7 +515,7 @@ function jumpMonthCalendarToToday() {
 .timeline-marker { display: flex; flex-direction: column; align-items: center; width: 14px; flex-shrink: 0; }
 .marker-ring {
   width: 14px; height: 14px; border-radius: 50%;
-  border: 3px solid var(--color-primary); background: #fff;
+  border: 3px solid var(--color-primary); background: var(--color-white);
   flex-shrink: 0;
 }
 .marker-ring.small { width: 10px; height: 10px; border-width: 2px; border-color: var(--color-text-tertiary); }
@@ -536,9 +544,9 @@ function jumpMonthCalendarToToday() {
   transition: all var(--transition-fast);
 }
 .edit-record-btn { background: var(--color-primary-bg); color: var(--color-primary); }
-.edit-record-btn:hover { background: var(--color-primary); color: #fff; }
+.edit-record-btn:hover { background: var(--color-primary); color: var(--color-white); }
 .delete-record-btn { background: var(--color-danger-bg); color: var(--color-danger); }
-.delete-record-btn:hover { background: var(--color-danger); color: #fff; }
+.delete-record-btn:hover { background: var(--color-danger); color: var(--color-white); }
 
 /* === 空状态 === */
 .empty-card {

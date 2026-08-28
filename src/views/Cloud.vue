@@ -5,6 +5,16 @@
     @dragleave.prevent="isDragging = false"
     @drop.prevent="handleDrop"
   >
+    <!-- 骨架屏：云盘文件列表加载期间展示 -->
+    <div v-if="isLoading" class="skeleton-grid" aria-busy="true" aria-label="云盘加载中">
+      <div class="skeleton skeleton-line mid"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-line short"></div>
+    </div>
+
+    <template v-else>
     <!-- 拖拽上传提示 -->
     <div v-if="isDragging" class="drag-overlay">
       <div class="drag-inner">
@@ -54,13 +64,13 @@
           />
         </div>
         
-        <button class="toolbar-btn" @click="goBack" :disabled="!canGoBack" title="返回上一级">
+        <button class="toolbar-btn" @click="goBack" :disabled="!canGoBack" title="返回上一级" aria-label="返回上一级">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
         
-        <button class="toolbar-btn" @click="showCreateFolderDialog" title="新建文件夹">
+        <button class="toolbar-btn" @click="showCreateFolderDialog" title="新建文件夹" aria-label="新建文件夹">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
             <line x1="12" y1="11" x2="12" y2="17"/>
@@ -68,7 +78,7 @@
           </svg>
         </button>
         
-        <button class="toolbar-btn primary" @click="selectFiles" title="上传文件">
+        <button class="toolbar-btn primary" @click="selectFiles" title="上传文件" aria-label="上传文件">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
@@ -246,7 +256,7 @@
             <div class="col-size">{{ file.type === 'folder' ? '-' : formatSize(file.size) }}</div>
             <div class="col-time">{{ formatDate(file.modified) }}</div>
             <div class="col-actions">
-              <button class="action-btn" @click.stop="showContextMenu($event, file)">
+              <button class="action-btn" @click.stop="showContextMenu($event, file)" aria-label="更多操作">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="5" r="2"/>
                   <circle cx="12" cy="12" r="2"/>
@@ -362,7 +372,7 @@
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <span>上传中 ({{ uploadTasks.length }})</span>
-        <button class="close-btn" @click="clearCompletedUploads">
+        <button class="close-btn" @click="clearCompletedUploads" aria-label="清除已完成上传">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -379,6 +389,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -442,7 +453,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
   margin: 16px;
 }
 
@@ -464,18 +475,18 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .drag-icon-wrap svg {
   width: 36px;
   height: 36px;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .drag-title {
-  font-size: 20px;
+  font-size: var(--text-xl-plus);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0 0 8px;
 }
 
 .drag-hint {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   margin: 0;
 }
@@ -512,7 +523,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   background: transparent;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -571,7 +582,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .search-input {
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-primary);
   width: 100%;
@@ -587,13 +598,15 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   align-items: center;
   justify-content: center;
   gap: 5px;
-  width: 36px;
-  height: 36px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min);
+  height: var(--touch-min);
   padding: 0;
   background: var(--color-border-light);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -620,7 +633,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   padding: 0 16px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   border-color: transparent;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .toolbar-btn.primary:hover {
@@ -664,17 +677,17 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 
 .file-icon {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-  color: #fff;
+  color: var(--color-white);
 }
 
 .folder-icon {
   background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
-  color: #fff;
+  color: var(--color-white);
 }
 
 .size-icon {
   background: linear-gradient(135deg, var(--color-success), #059669);
-  color: #fff;
+  color: var(--color-white);
 }
 
 .stat-info {
@@ -683,13 +696,13 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: var(--text-xl-plus);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-tertiary);
 }
@@ -765,7 +778,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .sort-select {
   border: none;
   background: transparent;
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -775,7 +788,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 
 .result-count {
   margin-left: auto;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-tertiary);
 }
@@ -817,14 +830,14 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .empty-state h3 {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0 0 6px;
 }
 
 .empty-state p {
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   color: var(--color-text-tertiary);
   margin: 0 0 20px;
 }
@@ -837,9 +850,9 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   border: none;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 600;
-  color: #fff;
+  color: var(--color-white);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -943,7 +956,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .file-preview.image svg {
-  color: #ec4899;
+  color: var(--color-pink);
 }
 
 .file-preview.video {
@@ -971,7 +984,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .file-name {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
   text-align: center;
@@ -983,7 +996,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .file-meta {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-tertiary);
 }
 
@@ -1003,7 +1016,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   padding: 10px 14px;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
 }
@@ -1056,7 +1069,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .list-row .col-time {
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   color: var(--color-text-secondary);
 }
 
@@ -1067,8 +1080,10 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min);
+  height: var(--touch-min);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1103,7 +1118,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .status-text {
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-tertiary);
 }
@@ -1116,7 +1131,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   box-shadow: var(--shadow-xl);
   padding: 8px 0;
   min-width: 160px;
-  z-index: 1000;
+  z-index: var(--z-modal);
   border: 1px solid var(--color-border);
 }
 
@@ -1125,7 +1140,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-primary);
   cursor: pointer;
@@ -1159,7 +1174,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
 }
 
 .modal-box {
@@ -1193,11 +1208,11 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .modal-icon svg {
   width: 20px;
   height: 20px;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .modal-header h3 {
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -1208,7 +1223,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   padding: 12px 16px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-primary);
   outline: none;
@@ -1234,7 +1249,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .modal-btn {
   padding: 10px 20px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1253,7 +1268,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 .modal-btn.confirm {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   border: none;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .modal-btn.confirm:hover:not(:disabled) {
@@ -1276,7 +1291,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
   border-radius: 12px;
   box-shadow: var(--shadow-xl);
   padding: 16px;
-  z-index: 500;
+  z-index: var(--z-panel);
   border: 1px solid var(--color-border);
 }
 
@@ -1294,15 +1309,17 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .progress-header span {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .close-btn {
   margin-left: auto;
-  width: 28px;
-  height: 28px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min);
+  height: var(--touch-min);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1327,7 +1344,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 
 .progress-name {
   flex: 1;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   overflow: hidden;
@@ -1351,7 +1368,7 @@ const { goBack, clearError, clearCompletedUploads, clearCompletedDownloads } = c
 }
 
 .progress-percent {
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 600;
   color: var(--color-primary);
   width: 40px;

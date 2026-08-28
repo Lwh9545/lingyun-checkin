@@ -229,9 +229,9 @@ export function calculateEffectiveDuration(checkIn: string, checkOut: string, co
   return `${hours}小时${minutes}分钟`
 }
 
-// ═══════════════════════════════════════════════
+// ═
 // 考勤统计（消除 Dashboard.vue 与 store 间的重复）
-// ═══════════════════════════════════════════════
+// ═
 
 export interface MonthlyStats {
   total: number

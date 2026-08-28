@@ -1,37 +1,17 @@
 <template>
   <div class="records-page">
-    <!-- Tab 导航 -->
-    <div class="tab-header fade-in-up">
-      <div class="tab-track">
-        <div class="tab-item" :class="{ active: currentTab === 'day' }" @click="currentTab = 'day'">
-          <span>日统计</span>
-        </div>
-        <div class="tab-item" :class="{ active: currentTab === 'month' }" @click="currentTab = 'month'">
-          <span>月统计</span>
-        </div>
-        <div class="tab-item" :class="{ active: currentTab === 'all' }" @click="currentTab = 'all'">
-          <span>全部记录</span>
-        </div>
-      </div>
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="skeleton-grid" aria-busy="true" aria-label="加载中">
+      <div class="skeleton skeleton-line short"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-line mid"></div>
+      <div class="skeleton skeleton-line"></div>
     </div>
 
-    <!-- 日统计 -->
-    <DayView
-      v-if="currentTab === 'day'"
-      @add="openAddModal"
-      @edit="openEditModal"
-      @delete="confirmDelete"
-    />
-
-    <!-- 月统计 -->
-    <MonthView
-      v-if="currentTab === 'month'"
-      @add="openAddModal"
-    />
-
-    <!-- 全部记录 -->
+    <template v-else>
+    <!-- 全部记录（内嵌 2 Tab：近7天 / 全部） -->
     <AllView
-      v-if="currentTab === 'all'"
       @add="openAddModal"
       @edit="openEditModal"
       @delete="confirmDelete"
@@ -43,7 +23,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <span class="modal-title">{{ isEditMode ? '编辑记录' : '添加考勤' }}</span>
-          <button class="modal-close" @click="closeEditModal">×</button>
+          <button class="modal-close" @click="closeEditModal" aria-label="关闭弹窗">×</button>
         </div>
         <div class="modal-body">
           <div class="form-row">
@@ -88,6 +68,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -98,14 +79,12 @@ import { calculateEffectiveDuration } from '../utils/attendanceUtils'
 import { LEAVE_TYPES } from '../utils/chartUtils'
 import { getTodayString } from '../utils/dateUtils'
 import { useToast } from '../composables/useToast'
-import DayView from './records/DayView.vue'
-import MonthView from './records/MonthView.vue'
 import AllView from './records/AllView.vue'
 
 const attendanceStore = useAttendanceStore()
+const { loading } = attendanceStore
 const toast = useToast()
 
-const currentTab = ref('day')
 const showEditModal = ref(false)
 const isEditMode = ref(false)
 const editingRecord = ref({ date: '', checkIn: '', checkOut: '', status: 'normal' })
@@ -215,7 +194,7 @@ onMounted(async () => {
 }
 
 .tab-item.active {
-  background: #fff;
+  background: var(--color-white);
   color: var(--color-primary);
   box-shadow: var(--shadow-sm);
 }
@@ -224,18 +203,18 @@ onMounted(async () => {
 
 /* === 弹窗 === */
 .modal {
-  position: fixed; inset: 0; z-index: 1000;
+  position: fixed; inset: 0; z-index: var(--z-modal);
   display: flex; align-items: center; justify-content: center;
 }
 .modal-mask {
   position: absolute; inset: 0;
-  background: rgba(15, 23, 42, 0.3);
+  background: var(--color-bg-mask-secondary);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 .modal-content {
   position: relative; z-index: 1;
-  background: #fff; border-radius: var(--radius-2xl);
+  background: var(--color-white); border-radius: var(--radius-2xl);
   padding: 24px 24px 20px; width: 340px; max-width: 90vw;
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
   animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -248,9 +227,18 @@ onMounted(async () => {
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .modal-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); }
 .modal-close {
-  width: 30px; height: 30px; border-radius: 50%; border: none;
-  background: var(--color-border-light); font-size: 18px; color: var(--color-text-secondary);
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min); height: var(--touch-min);
+  border-radius: 50%;
+  border: none;
+  background: var(--color-border-light);
+  font-size: 20px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all var(--transition-fast);
 }
 .modal-close:hover { background: var(--color-border); color: var(--color-text-primary); }
@@ -278,7 +266,7 @@ select.form-input { cursor: pointer; }
 .btn-cancel:hover { background: var(--color-border); }
 .btn-confirm {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #fff; box-shadow: 0 4px 14px var(--color-primary-glow);
+  color: var(--color-white); box-shadow: 0 4px 14px var(--color-primary-glow);
 }
 .btn-confirm:hover { box-shadow: 0 6px 20px var(--color-primary-glow); transform: translateY(-1px); }
 </style>

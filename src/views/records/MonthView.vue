@@ -3,14 +3,14 @@
     <!-- 月份导航卡 -->
     <div class="month-header-card glass-card-strong fade-in-scale" style="animation-delay:0.05s">
       <div class="month-navigator">
-        <button class="nav-btn" @click="navigateMonth(-1)">
+        <button class="nav-btn" @click="navigateMonth(-1)" aria-label="上个月">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="month-display">
           <span class="year-label">{{ selectedYear }}年</span>
           <span class="month-big">{{ selectedMonthNum }}月</span>
         </div>
-        <button class="nav-btn" @click="navigateMonth(1)">
+        <button class="nav-btn" @click="navigateMonth(1)" aria-label="下个月">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -90,10 +90,14 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAttendanceStore } from '../../stores/attendance'
-import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS } from '../../utils/exportUtils'
+import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS, exportWorkbook } from '../../utils/exportUtils'
+import { createLogger } from '../../utils/logger'
+import { useToast } from '../../composables/useToast'
 
 const emit = defineEmits(['add'])
 const attendanceStore = useAttendanceStore()
+const log = createLogger('month-records-view')
+const toast = useToast()
 
 const selectedMonthNum = ref(new Date().getMonth() + 1)
 const selectedYear = ref(new Date().getFullYear())
@@ -183,16 +187,19 @@ async function exportMonthToExcel() {
   const targetMonth = `${selectedYear.value}-${padZero(selectedMonthNum.value)}`
   const records = attendanceStore.records.filter(r => r.date.startsWith(targetMonth))
   if (records.length === 0) return
-  const XLSX = await import('xlsx')
-  const data = buildExportRows(records, getWeekday)
-  const worksheet = XLSX.utils.json_to_sheet(data)
-  worksheet['!cols'] = EXPORT_COL_WIDTHS
-  const statsSheet = XLSX.utils.json_to_sheet(buildStatsRows(records, getWeekday))
-  statsSheet['!cols'] = [{ wch: 12 }, { wch: 24 }]
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, '打卡记录')
-  XLSX.utils.book_append_sheet(workbook, statsSheet, '月度汇总')
-  XLSX.writeFile(workbook, `考勤记录_${targetMonth}.xlsx`)
+  const filename = `考勤记录_${targetMonth}.xlsx`
+  try {
+    const data = buildExportRows(records, getWeekday)
+    const statsRows = buildStatsRows(records, getWeekday)
+    await exportWorkbook([
+      { name: '打卡记录', rows: data, colWidths: EXPORT_COL_WIDTHS },
+      { name: '月度汇总', rows: statsRows, colWidths: [{ wch: 12 }, { wch: 24 }] }
+    ], filename)
+    toast.success(`考勤记录已导出：${filename}`)
+  } catch (error) {
+    log.error('[month-records] Excel 导出失败:', error)
+    toast.error('导出失败：' + (error?.message || '未知错误'))
+  }
 }
 </script>
 
@@ -216,12 +223,17 @@ async function exportMonthToExcel() {
 }
 
 .nav-btn {
-  width: 28px; height: 28px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.85); color: var(--color-text-secondary);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min); height: var(--touch-min);
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-card-soft);
+  color: var(--color-text-secondary);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0; transition: all var(--transition-fast);
 }
-.nav-btn:hover:not(:disabled) { background: #fff; color: var(--color-primary); box-shadow: var(--shadow-sm); }
+.nav-btn:hover:not(:disabled) { background: var(--color-white); color: var(--color-primary); box-shadow: var(--shadow-sm); }
 .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .nav-btn svg { width: 14px; height: 14px; }
 
@@ -235,7 +247,7 @@ async function exportMonthToExcel() {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; min-height: 28px; min-width: 64px;
   border-radius: 999px; border: none;
-  background: var(--color-primary); color: #fff;
+  background: var(--color-primary); color: var(--color-white);
   font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   cursor: pointer; transition: all var(--transition-fast);
 }
@@ -272,7 +284,7 @@ async function exportMonthToExcel() {
 .ratio-segment { min-width: 2px; }
 .normal-seg   { background: var(--color-success); }
 .late-seg     { background: var(--color-danger); }
-.early-seg    { background: #f59e0b; }
+.early-seg    { background: var(--color-warning); }
 .ot-seg       { background: var(--color-purple); }
 
 .attendance-summary { display: flex; flex-direction: column; gap: 10px; }

@@ -4,9 +4,9 @@
  */
 import type { HolidayStatus } from '../types/core'
 
-// ═══════════════════════════════════════════════
+// ═
 // 内置兜底数据
-// ═══════════════════════════════════════════════
+// ═
 
 const BUILTIN_HOLIDAYS: Record<string, string> = {
   // 2025
@@ -34,9 +34,9 @@ const BUILTIN_WORK_ADJUSTMENTS: Record<string, boolean> = {
   '2026-02-15': true, '2026-02-28': true, '2026-04-11': true, '2026-05-09': true, '2026-09-27': true, '2026-10-10': true,
 }
 
-// ═══════════════════════════════════════════════
+// ═
 // 运行时状态
-// ═══════════════════════════════════════════════
+// ═
 
 let _holidays: Record<string, string> = { ...BUILTIN_HOLIDAYS }
 let _workAdjustments: Record<string, boolean> = { ...BUILTIN_WORK_ADJUSTMENTS }
@@ -48,9 +48,9 @@ const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 天
 const API_BASE = 'https://timor.tech/api/holiday'
 const FETCH_TIMEOUT_MS = 8000
 
-// ═══════════════════════════════════════════════
+// ═
 // API
-// ═══════════════════════════════════════════════
+// ═
 
 /** timor.tech API 返回的单条节假日信息 */
 interface TimorHolidayInfo {
@@ -143,7 +143,7 @@ export async function refreshHolidayData(): Promise<void> {
           holidays: _holidays, adjustments: _workAdjustments,
           year: currentYear, time: _lastFetchTime
         }))
-      } catch { /* localStorage 不可用 */ }
+      } catch (e) { log.warn(`[holidays] save cache failed (localStorage unavailable or quota exceeded):`, e.message); }
     } else {
       _fetchState = 'error'
     }
@@ -169,7 +169,14 @@ export function loadCachedHolidays(): boolean {
       _fetchState = 'success'
       return true
     }
-  } catch { /* ignore */ }
+  } catch (e) {
+    // 缓存损坏/解析失败降级：用 BUILTIN 内建节假日数据兜底，不要静默吞
+    log.warn(`[holidays] loadCachedHolidays corrupted, falling back to BUILTIN_HOLIDAYS:`, e.message)
+    _holidays = { ...BUILTIN_HOLIDAYS }
+    _workAdjustments = { ...BUILTIN_WORK_ADJUSTMENTS }
+    _fetchState = 'error'
+    return false
+  }
   return false
 }
 
@@ -183,9 +190,9 @@ export function getHolidayStatus(): HolidayStatus {
   }
 }
 
-// ═══════════════════════════════════════════════
+// ═
 // 查询
-// ═══════════════════════════════════════════════
+// ═
 
 export function getHolidayName(dateStr: string): string | null {
   return _holidays[dateStr] || null

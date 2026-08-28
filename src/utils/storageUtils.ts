@@ -1,46 +1,27 @@
-/**
- * 本地存储工具函数 (TypeScript)
- */
+/** 本地存储：electron 通道优先，失败降级 localStorage */
 import { STORAGE_KEYS } from './constants.js'
 import { mergeRecords } from './recordUtils'
 import { createLogger } from './logger'
 import type { AttendanceRecord } from '../types/core'
 
 const log = createLogger('storage')
-
-// ══════════════════════════════════
-// 内存缓存
-// ══════════════════════════════════
-
-const _cache: Record<string, unknown> = {
-  [STORAGE_KEYS.ATTENDANCE_RECORDS]: null,
-}
-
-function hasElectronAPI(): boolean {
-  return typeof window !== 'undefined' && !!window.electronAPI?.storage
-}
-
-// ══════════════════════════════════
-// 核心读写
-// ══════════════════════════════════
+const _cache: Record<string, unknown> = { [STORAGE_KEYS.ATTENDANCE_RECORDS]: null }
+const hasElectronAPI = (): boolean => typeof window !== 'undefined' && !!window.electronAPI?.storage
 
 export async function getStorage<T = unknown>(key: string, defaultValue: T): Promise<T> {
-  if (_cache[key] !== undefined && _cache[key] !== null) {
-    // 泛型边界：_cache[key] 为 unknown，T 由调用方指定，此处类型断言是泛型函数的必要边界
-    return _cache[key] as T
-  }
+  if (_cache[key] !== undefined && _cache[key] !== null) return _cache[key] as T
   try {
     let value: unknown
+    let usedElectron = false
     if (hasElectronAPI()) {
-      value = await window.electronAPI!.storage.get(key, defaultValue)
-    } else {
+      try { value = await window.electronAPI!.storage.get(key, defaultValue); usedElectron = true }
+      catch (eIpc) { log.warn(`[storage] electron.get(${key}) fallback:`, eIpc) }
+    }
+    if (!usedElectron) {
       const raw = localStorage.getItem(key)
       value = raw !== null ? JSON.parse(raw) : defaultValue
     }
-    if (key in _cache) {
-      _cache[key] = value
-    }
-    // 同上：泛型边界，value 为 unknown，需断言为 T
+    if (key in _cache) _cache[key] = value
     return value as T
   } catch (e) {
     log.error(`[storage] get failed [${key}]:`, e)
@@ -50,18 +31,19 @@ export async function getStorage<T = unknown>(key: string, defaultValue: T): Pro
 
 export async function setStorage(key: string, value: unknown): Promise<boolean> {
   try {
-    let success: boolean
+    let success = false
     if (hasElectronAPI()) {
-      success = await window.electronAPI!.storage.set(key, value)
+      try { success = await window.electronAPI!.storage.set(key, value) }
+      catch (eIpc) { log.warn(`[storage] electron.set(${key}) fallback:`, eIpc) }
+      if (!success) { localStorage.setItem(key, JSON.stringify(value)); success = true }
     } else {
       localStorage.setItem(key, JSON.stringify(value))
       success = true
     }
-    if (success && key in _cache) {
-      _cache[key] = value
-    }
+    if (success && key in _cache) _cache[key] = value
     return success
   } catch (e) {
+    if (key in _cache) _cache[key] = value
     log.error(`[storage] set failed [${key}]:`, e)
     return false
   }
@@ -69,16 +51,17 @@ export async function setStorage(key: string, value: unknown): Promise<boolean> 
 
 export async function removeStorage(key: string): Promise<boolean> {
   try {
-    let success: boolean
+    let success = false
     if (hasElectronAPI()) {
-      success = await window.electronAPI!.storage.remove(key)
+      try { success = await window.electronAPI!.storage.remove(key) }
+      catch (eIpc) { log.warn(`[storage] electron.remove(${key}) fallback:`, eIpc) }
+      try { localStorage.removeItem(key) } catch (e) { log.warn(`[storage] localStorage.remove failed (privacy mode / quota): ${key}`, e.message); }
+      if (!success) success = true
     } else {
       localStorage.removeItem(key)
       success = true
     }
-    if (success && key in _cache) {
-      _cache[key] = null
-    }
+    if (success && key in _cache) _cache[key] = null
     return success
   } catch (e) {
     log.error(`[storage] remove failed [${key}]:`, e)
@@ -86,9 +69,9 @@ export async function removeStorage(key: string): Promise<boolean> {
   }
 }
 
-// ══════════════════════════════════
+// ═
 // 业务函数
-// ══════════════════════════════════
+// ═
 
 export async function getAttendanceRecords(): Promise<AttendanceRecord[]> {
   const raw = await getStorage<AttendanceRecord[]>(STORAGE_KEYS.ATTENDANCE_RECORDS, [])

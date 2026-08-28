@@ -17,7 +17,7 @@ import { createLogger } from '../utils/logger'
 
 const log = createLogger('store')
 
-// ==================== Store 定义 ====================
+// Store 定义
 export const useAttendanceStore = defineStore('attendance', () => {
   // 配置从 useConfigStore 获取(单一数据源,避免重复定义)
   // ⚠️ ref 必须用 storeToRefs 解构(Pinia 直接解构得到的是解包值,会失去响应性)
@@ -34,14 +34,14 @@ export const useAttendanceStore = defineStore('attendance', () => {
     overtimeAfterEndThreshold, checkWindowBefore, lateThreshold
   } = storeToRefs(configStore)
 
-  // ==================== 状态 ====================
+  // 状态
   const records = ref([])
   const currentTime = ref('00:00:00')
   const currentDate = ref('')
   const loading = ref(false)
   const isChecking = ref(false)
 
-  // ==================== 计算属性 ====================
+  // 计算属性
   const todayRecords = computed(() => {
     const today = getTodayString()
     return records.value.find(r => r.date === today)
@@ -66,7 +66,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
   const displayStartTime = computed(() => workStartTime.value)
   const displayEndTime = computed(() => workEndTime.value)
 
-  // ==================== 统计数据 ====================
+  // 统计数据
   /** 月度统计数据 */
   const monthlyStats = computed(() => {
     const now = new Date()
@@ -118,7 +118,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return ''
   })
 
-  // ==================== 核心：加载配置和记录 ====================
+  // 核心：加载配置和记录
   async function loadRecords() {
     loading.value = true
     try {
@@ -132,7 +132,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
   }
 
-  // ==================== 核心：执行打卡 ====================
+  // 核心：执行打卡
   async function handleCheck() {
     if (isChecking.value) {
       return { success: false, message: '正在打卡中，请稍候再试' }
@@ -195,7 +195,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
   }
 
-  // ==================== 记录管理：新增或更新单条记录 ====================
+  // 记录管理：新增或更新单条记录
   async function addRecord(recordData) {
     if (!recordData || !recordData.date) return false
     const freshRecords = mergeRecords(await getAttendanceRecords())
@@ -230,12 +230,12 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return true
   }
 
-  // ==================== 记录管理：更新单条记录 ====================
+  // 记录管理：更新单条记录
   async function updateRecord(date, recordData) {
     return await addRecord({ ...recordData, date })
   }
 
-  // ==================== 记录管理：删除单条记录 ====================
+  // 记录管理：删除单条记录
   async function deleteRecord(date) {
     const freshRecords = mergeRecords(await getAttendanceRecords())
     const finalRecords = freshRecords.filter(r => r.date !== date)
@@ -243,7 +243,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     await overwriteAttendanceRecords(finalRecords)
   }
 
-  // ==================== 自动打卡逻辑 ====================
+  // 自动打卡逻辑
   async function tryAutoCheckIn(silent = false) {
     try {
       const today = getTodayString()
@@ -292,7 +292,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return true
   }
 
-  // ==================== 时间更新 ====================
+  // 时间更新
   function updateCurrentTime() {
     const now = new Date()
     const hours = String(now.getHours()).padStart(2, '0')
@@ -311,7 +311,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   }
 
-  // ==================== 导出 ====================
+  // 导出
   return {
     // 状态
     records,

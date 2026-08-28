@@ -3,9 +3,9 @@
  * 所有 TypeScript 模块共享的类型基础
  */
 
-// ══════════════════════════════════
+// ═
 // 打卡记录
-// ══════════════════════════════════
+// ═
 
 export type AttendanceStatus =
   | 'normal'
@@ -32,9 +32,9 @@ export interface AttendanceRecord {
 
 export type CheckType = '上班' | '下班'
 
-// ══════════════════════════════════
+// ═
 // 应用配置
-// ══════════════════════════════════
+// ═
 
 export interface AppConfig {
   // 基础时间
@@ -73,9 +73,9 @@ export interface AppConfig {
   afternoonEnd?: string
 }
 
-// ══════════════════════════════════
+// ═
 // 存储键名枚举
-// ══════════════════════════════════
+// ═
 
 export const enum StorageKey {
   ATTENDANCE_RECORDS = 'attendance_records',
@@ -103,9 +103,9 @@ export const enum StorageKey {
   APP_VERSION = 'app_version',
 }
 
-// ══════════════════════════════════
+// ═
 // 日历
-// ══════════════════════════════════
+// ═
 
 export interface DayInfo {
   date: string
@@ -148,9 +148,9 @@ export interface WeekDay {
   isComplete: boolean
 }
 
-// ══════════════════════════════════
+// ═
 // 数据管理
-// ══════════════════════════════════
+// ═
 
 export interface DataStats {
   totalRecords: number
@@ -182,9 +182,22 @@ export interface UpdateInfo {
   dev?: boolean
 }
 
-// ══════════════════════════════════
+// 费用报销：金额存「分」整数，消灭 0.1+0.2 浮点误差
+export type ExpenseCategory = 'food' | 'transport' | 'hotel' | 'office' | 'other'
+//   餐饮(外卖/打饭) 交通(地铁/打车/高铁) 住宿(出差酒店) 办公(文具/耗材) 其他(兜底含加油停车通讯)
+
+export interface ReimbursementRecord {
+  id: string
+  date: string         // YYYY-MM-DD
+  category: ExpenseCategory
+  amountCents: number  // 整数分
+  remark: string       // 选填 ≤200字
+  createdAt: number
+}
+
+// ═
 // IPC / Electron API
-// ══════════════════════════════════
+// ═
 
 export interface ElectronAPI {
   storage: {

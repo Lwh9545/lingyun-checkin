@@ -15,7 +15,7 @@ import { createLogger } from '../utils/logger'
 const log = createLogger('config-store')
 
 export const useConfigStore = defineStore('config', () => {
-  // ==================== 配置 ref ====================
+  // 配置 ref
   const workStartTime = ref(DEFAULT_CONFIG.WORK_START_TIME)
   const workEndTime = ref(DEFAULT_CONFIG.WORK_END_TIME)
   const workDays = ref([...DEFAULT_CONFIG.WORK_DAYS])
@@ -60,7 +60,7 @@ export const useConfigStore = defineStore('config', () => {
     return c.clone ? structuredClone(c.def) : c.def
   }
 
-  // ==================== 配置方法 ====================
+  // 配置方法
 
   /** 构建运行时配置对象(传给 checkAttendanceStatus 等) */
   function getConfig() {
@@ -120,7 +120,7 @@ export const useConfigStore = defineStore('config', () => {
     return { autoStartupResult }
   }
 
-  // ==================== 导出 ====================
+  // 导出
   return {
     // 配置 ref
     workStartTime, workEndTime, workDays,

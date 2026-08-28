@@ -1,14 +1,61 @@
 <template>
   <div class="settings-page">
-    <!-- 工作时间设置 -->
-    <div class="settings-card time-card fade-in-up">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-header-text">
-            <span class="card-title">工作时间设置</span>
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="skeleton-grid" aria-busy="true" aria-label="加载中">
+      <div class="skeleton skeleton-line short"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-line mid"></div>
+    </div>
+
+    <template v-else>
+    <!-- 自动打卡设置 -->
+    <div class="settings-card auto-card fade-in-up">
+      <div class="card-header"><h2 class="card-title">自动打卡 & 启动</h2></div>
+      
+      <div class="auto-settings">
+        <div class="auto-group">
+          <div class="auto-group-title">开关设置</div>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <span class="setting-label">自动上班打卡</span>
+              <span class="setting-hint">到达上班时间自动完成签到（含开机自启后触发）</span>
+            </div>
+            <button type="button" class="switch" :class="{ active: localSettings.autoCheckIn }" role="switch" :aria-checked="localSettings.autoCheckIn" @click="localSettings.autoCheckIn = !localSettings.autoCheckIn" @keydown.enter.prevent="localSettings.autoCheckIn = !localSettings.autoCheckIn"></button>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <span class="setting-label">关机自动签退</span>
+              <span class="setting-hint">关闭电脑/退出程序时自动完成下班打卡，避免漏卡</span>
+            </div>
+            <button type="button" class="switch" :class="{ active: localSettings.autoCheckOutOnShutdown }" role="switch" :aria-checked="localSettings.autoCheckOutOnShutdown" @click="toggleShutdownAutoCheck" @keydown.enter.prevent="toggleShutdownAutoCheck"></button>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <span class="setting-label">开机自启动</span>
+              <span class="setting-hint">系统启动时自动运行本程序</span>
+            </div>
+            <button type="button" class="switch" :class="{ active: localSettings.autoStartup }" role="switch" :aria-checked="localSettings.autoStartup" @click="localSettings.autoStartup = !localSettings.autoStartup" @keydown.enter.prevent="localSettings.autoStartup = !localSettings.autoStartup"></button>
+          </div>
+        </div>
+
+        <div class="auto-group">
+          <div class="auto-group-title">偏移参数</div>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <span class="setting-label">上班打卡偏移（分钟）</span>
+              <span class="setting-hint">正数=延后打卡，负数=提前打卡</span>
+            </div>
+            <input type="number" v-model.number="localSettings.autoCheckInOffset" class="number-input small" :disabled="!localSettings.autoCheckIn" @blur="clampNumber('autoCheckInOffset', -120, 120)" />
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 工作时间设置 -->
+    <div class="settings-card time-card fade-in-up">
+      <div class="card-header"><h2 class="card-title">工作时间设置</h2></div>
       
       <div class="time-settings">
         <!-- 实时校验错误提示 -->
@@ -93,12 +140,8 @@
             <button type="button" class="switch" :class="{ active: localSettings.overtimeOnWorkday }" role="switch" :aria-checked="localSettings.overtimeOnWorkday" @click="localSettings.overtimeOnWorkday = !localSettings.overtimeOnWorkday" @keydown.enter.prevent="localSettings.overtimeOnWorkday = !localSettings.overtimeOnWorkday"></button>
           </div>
           <div class="time-row time-row-compact">
-            <label class="time-label">周六加班</label>
-            <button type="button" class="switch" :class="{ active: localSettings.overtimeOnSaturday }" role="switch" :aria-checked="localSettings.overtimeOnSaturday" @click="localSettings.overtimeOnSaturday = !localSettings.overtimeOnSaturday" @keydown.enter.prevent="localSettings.overtimeOnSaturday = !localSettings.overtimeOnSaturday"></button>
-          </div>
-          <div class="time-row time-row-compact">
-            <label class="time-label">周日加班</label>
-            <button type="button" class="switch" :class="{ active: localSettings.overtimeOnSunday }" role="switch" :aria-checked="localSettings.overtimeOnSunday" @click="localSettings.overtimeOnSunday = !localSettings.overtimeOnSunday" @keydown.enter.prevent="localSettings.overtimeOnSunday = !localSettings.overtimeOnSunday"></button>
+            <label class="time-label">周末/节假日自动算加班</label>
+            <button type="button" class="switch" :class="{ active: weekendOvertimeOn }" role="switch" :aria-checked="weekendOvertimeOn" @click="toggleWeekendOvertime()" @keydown.enter.prevent="toggleWeekendOvertime()"></button>
           </div>
           <div class="time-row">
             <div class="time-label-wrapper">
@@ -114,79 +157,32 @@
       </div>
     </div>
 
-    <!-- 自动打卡设置 -->
-    <div class="settings-card auto-card fade-in-up">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-header-text">
-            <span class="card-title">自动打卡</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="auto-settings">
-        <div class="auto-group">
-          <div class="auto-group-title">开关设置</div>
-          <div class="setting-item">
-            <div class="setting-label-wrapper">
-              <span class="setting-label">自动上班打卡</span>
-              <span class="setting-hint">到达上班时间自动完成签到（含开机自启后触发）</span>
-            </div>
-            <button type="button" class="switch" :class="{ active: localSettings.autoCheckIn }" role="switch" :aria-checked="localSettings.autoCheckIn" @click="localSettings.autoCheckIn = !localSettings.autoCheckIn" @keydown.enter.prevent="localSettings.autoCheckIn = !localSettings.autoCheckIn"></button>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label-wrapper">
-              <span class="setting-label">关机自动签退</span>
-              <span class="setting-hint">关闭电脑/退出程序时自动完成下班打卡，避免漏卡</span>
-            </div>
-            <button type="button" class="switch" :class="{ active: localSettings.autoCheckOutOnShutdown }" role="switch" :aria-checked="localSettings.autoCheckOutOnShutdown" @click="toggleShutdownAutoCheck" @keydown.enter.prevent="toggleShutdownAutoCheck"></button>
-          </div>
-        </div>
-
-        <div class="auto-group">
-          <div class="auto-group-title">偏移参数</div>
-          <div class="setting-item">
-            <div class="setting-label-wrapper">
-              <span class="setting-label">上班打卡偏移（分钟）</span>
-              <span class="setting-hint">正数=延后打卡，负数=提前打卡</span>
-            </div>
-            <input type="number" v-model.number="localSettings.autoCheckInOffset" class="number-input small" :disabled="!localSettings.autoCheckIn" @blur="clampNumber('autoCheckInOffset', -120, 120)" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 系统设置 -->
-    <div class="settings-card system-card fade-in-up">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-header-text">
-            <span class="card-title">系统设置</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="system-settings">
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <span class="setting-label">开机自启动</span>
-            <span class="setting-hint">系统启动时自动运行本程序</span>
-          </div>
-          <button type="button" class="switch" :class="{ active: localSettings.autoStartup }" role="switch" :aria-checked="localSettings.autoStartup" @click="localSettings.autoStartup = !localSettings.autoStartup" @keydown.enter.prevent="localSettings.autoStartup = !localSettings.autoStartup"></button>
-        </div>
-      </div>
-    </div>
 
     <!-- 数据管理 -->
     <div class="settings-card data-card fade-in-up">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-header-text">
-            <span class="card-title">数据管理</span>
+      <div class="card-header"><h2 class="card-title">数据管理</h2></div>
+      <div class="data-settings">
+        <!-- 加班费时薪（HAB3：Salary 页搬家） -->
+        <div class="setting-item">
+          <div class="setting-label-wrapper">
+            <span class="setting-label">加班费时薪</span>
+            <span class="setting-hint">保存本机，工资核对器按法定倍率核算加班费</span>
+          </div>
+          <div class="number-input-inline" style="flex:none">
+            <input
+              type="number"
+              v-model="hourlyWageInput"
+              class="number-input"
+              min="0"
+              max="10000"
+              step="0.01"
+              placeholder="未设置"
+              @blur="saveHourlyWage"
+              @keyup.enter="($event.target.blur())"
+            />
+            <span class="unit-label">¥/小时</span>
           </div>
         </div>
-      </div>
-      <div class="data-settings">
         <div class="setting-item">
           <div class="setting-label-wrapper">
             <span class="setting-label">检查更新</span>
@@ -264,18 +260,21 @@
         {{ isSaving ? '保存中...' : '保存设置' }}
       </button>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from "vue"
+import { ref, onMounted, reactive, computed } from "vue"
 import { useAttendanceStore } from "../stores/attendance"
 import { useToast } from "../composables/useToast"
 import { useSettingsValidation } from "../composables/useSettingsValidation"
 import { useDataManagement } from "../composables/useDataManagement"
-import { DEFAULT_CONFIG } from "../utils/constants"
+import { DEFAULT_CONFIG, STORAGE_KEYS } from "../utils/constants"
+import { getStorage, setStorage } from "../utils/storageUtils"
 
 const store = useAttendanceStore()
+const { loading } = store
 const toast = useToast()
 
 // ── 设置项 schema ──
@@ -323,6 +322,15 @@ const localSettings = reactive({
 // ── 校验器（composable）──
 const { timeErrors, anyOvertimeEnabled, validateSettings } = useSettingsValidation(localSettings)
 
+/** UI 合并开关：周末/节假日 3 字段同步读写（存储契约 4 字段绝对保留） */
+const weekendOvertimeOn = computed(() => localSettings.overtimeOnSaturday || localSettings.overtimeOnSunday || localSettings.overtimeOnNonWorkday)
+function toggleWeekendOvertime() {
+  const v = !weekendOvertimeOn.value
+  localSettings.overtimeOnSaturday = v
+  localSettings.overtimeOnSunday = v
+  localSettings.overtimeOnNonWorkday = v
+}
+
 // ── 数据管理（composable）──
 const {
   appVersion, dataStats, backupList, isExporting, isImporting,
@@ -336,6 +344,32 @@ const {
 // ── 本地 UI 状态 ──
 const isSaving = ref(false)
 const historyCollapsed = ref(true)
+
+// ── 加班费时薪（HAB3：Salary 页搬家过来，存本机）──
+const hourlyWageInput = ref('')
+async function loadHourlyWage() {
+  try {
+    const saved = await getStorage(STORAGE_KEYS.SALARY_HOURLY_WAGE, null)
+    hourlyWageInput.value = saved == null ? '' : String(saved)
+  } catch (_) { hourlyWageInput.value = '' }
+}
+async function saveHourlyWage() {
+  const raw = hourlyWageInput.value.toString().trim()
+  if (raw === '') {
+    await setStorage(STORAGE_KEYS.SALARY_HOURLY_WAGE, null)
+    toast.info('已清空时薪设置')
+    return
+  }
+  const n = Number(raw)
+  if (isNaN(n) || n <= 0 || n > 10000) {
+    toast.warning('时薪应在 0.01 ~ 10000 之间')
+    return
+  }
+  const rounded = Math.round(n * 100) / 100
+  hourlyWageInput.value = String(rounded)
+  await setStorage(STORAGE_KEYS.SALARY_HOURLY_WAGE, rounded)
+  toast.success(`加班费时薪已保存为 ¥${rounded.toFixed(2)}/小时`)
+}
 
 /** 从 store 配置加载到 localSettings */
 function loadSettingsFromStore() {
@@ -415,11 +449,17 @@ onMounted(async () => {
   loadSettingsFromStore()
   await loadDataStats()
   await loadEncryptionStatus()
+  await loadHourlyWage()
   try {
     if (window.electronAPI?.dataManager?.getAppVersion) {
       appVersion.value = await window.electronAPI.dataManager.getAppVersion()
     }
-  } catch (_) { /* 非 Electron 环境忽略 */ }
+  } catch (err) {
+    // 非 Electron 环境（Vite 单测/SSR 预览）下 getAppVersion 不存在，降级显示默认版本号
+    if (typeof console !== 'undefined') {
+      console.debug('[Settings] getAppVersion skipped: not running in Electron shell')
+    }
+  }
 })
 </script>
 
@@ -436,21 +476,13 @@ onMounted(async () => {
 /* === 卡片 === */
 .settings-card {
   margin: 0 20px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-bg-card-solid);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(255, 255, 255, 0.6);
   overflow: hidden;
-}
-
-.time-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(255, 255, 255, 0.9));
-}
-
-.auto-card {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(255, 255, 255, 0.9));
 }
 
 .card-header {
@@ -460,35 +492,11 @@ onMounted(async () => {
   justify-content: space-between;
 }
 
-.card-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.card-icon {
-  font-size: 20px;
-}
-
-.card-header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
 .card-title {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 22px;
-}
-
-.card-subtitle {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  font-weight: 400;
-  line-height: 16px;
-  opacity: 0.85;
 }
 
 /* === 时间设置 === */
@@ -544,14 +552,14 @@ onMounted(async () => {
 }
 
 .time-group-title {
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
   line-height: 18px;
 }
 
 .time-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-primary);
   font-weight: 500;
   line-height: 18px;
@@ -570,7 +578,7 @@ onMounted(async () => {
 }
 
 .param-hint {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   font-weight: 400;
   line-height: 14px;
@@ -578,7 +586,7 @@ onMounted(async () => {
 }
 
 .unit-label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   margin-left: 6px;
 }
@@ -595,13 +603,13 @@ onMounted(async () => {
 
 .validation-errors {
   padding: 8px 12px;
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--color-danger-bg-soft);
   border-radius: var(--radius-md);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .error-item {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-danger);
   font-weight: 500;
   line-height: 18px;
@@ -623,9 +631,9 @@ onMounted(async () => {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text-primary);
-  background: #fff;
+  background: var(--color-white);
   outline: none;
   transition: border-color 0.2s;
   flex-shrink: 0;
@@ -640,9 +648,9 @@ onMounted(async () => {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text-primary);
-  background: #fff;
+  background: var(--color-white);
   outline: none;
   width: 100px;
   text-align: right;
@@ -675,7 +683,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: var(--color-bg);
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -684,7 +692,7 @@ onMounted(async () => {
 
 .weekday-item.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-white);
   box-shadow: 0 1px 4px var(--color-primary-glow);
 }
 
@@ -716,7 +724,7 @@ onMounted(async () => {
 }
 
 .auto-group-title {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 20px;
@@ -751,14 +759,14 @@ onMounted(async () => {
 }
 
 .setting-label {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text-primary);
   font-weight: 500;
   line-height: 20px;
 }
 
 .setting-hint {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   font-weight: 400;
   line-height: 18px;
@@ -772,7 +780,7 @@ onMounted(async () => {
   height: 36px;
   padding: 0 12px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -796,10 +804,11 @@ onMounted(async () => {
 
 /* === Switch === */
 .switch {
-  width: 52px;
-  height: 32px;
+  width: 60px;
+  height: var(--touch-min);
+  min-height: var(--touch-min);
   border-radius: 999px;
-  background: #d1d5db;
+  background: var(--color-border-muted);
   position: relative;
   transition: background-color var(--transition-base);
   cursor: pointer;
@@ -825,7 +834,7 @@ onMounted(async () => {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-white);
   top: 50%;
   left: 3px;
   transform: translateY(-50%);
@@ -838,26 +847,14 @@ onMounted(async () => {
   left: calc(100% - 26px - 3px);
 }
 
-/* === 系统设置 === */
-.system-settings {
-  padding: 8px 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
 /* === 数据管理 === */
-.data-card {
-  background: linear-gradient(135deg, var(--color-success-bg), rgba(255, 255, 255, 0.9));
-}
-
 .data-stats {
   padding: 4px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-bg-card-thin);
   margin: 0 24px;
   border-radius: var(--radius-md);
   height: 40px;
@@ -870,14 +867,14 @@ onMounted(async () => {
 }
 
 .stat-chip-value {
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-primary);
   line-height: 22px;
 }
 
 .stat-chip-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   font-weight: 400;
 }
@@ -905,15 +902,15 @@ onMounted(async () => {
 .data-actions .btn-secondary {
   width: 100%;
   height: 34px;
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .btn-secondary {
   height: 36px;
-  background: #fff;
+  background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -929,16 +926,16 @@ onMounted(async () => {
 
 .btn-secondary.danger {
   color: var(--color-danger);
-  border-color: rgba(220, 38, 38, 0.3);
-  background: rgba(254, 226, 226, 0.4);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg-light);
 }
-.btn-secondary.danger:hover:not(:disabled) { background: rgba(254, 226, 226, 0.9); }
+.btn-secondary.danger:hover:not(:disabled) { background: var(--color-danger-bg-light-solid); }
 
 .check-btn {
   flex: none;
   height: 36px;
   padding: 0 16px;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   min-width: auto;
   width: auto;
 }
@@ -960,28 +957,28 @@ onMounted(async () => {
 }
 
 .collapse-icon {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   transition: transform var(--transition-fast);
 }
 
 .backup-list { padding: 0; }
-.backup-title { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+.backup-title { font-size: var(--text-base-sm); font-weight: 600; color: var(--color-text-primary); }
 
 .backup-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-bg-card-thin);
   border-left: 3px solid var(--color-primary);
   border-radius: 4px;
   margin-bottom: 4px;
 }
 
 .backup-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.backup-name { font-size: 12px; color: var(--color-text-primary); font-family: var(--font-mono); }
-.backup-time { font-size: 11px; color: var(--color-text-secondary); }
+.backup-name { font-size: var(--text-sm); color: var(--color-text-primary); font-family: var(--font-mono); }
+.backup-time { font-size: var(--text-xs); color: var(--color-text-secondary); }
 
 .backup-btns {
   display: flex;
@@ -992,10 +989,10 @@ onMounted(async () => {
 .btn-small {
   padding: 4px 10px;
   background: var(--color-success);
-  color: #fff;
+  color: var(--color-white);
   border: none;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -1008,7 +1005,7 @@ onMounted(async () => {
   padding: 24px;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-base-sm);
 }
 
 /* === 底部按钮 === */
@@ -1025,7 +1022,7 @@ onMounted(async () => {
   flex: 1;
   height: 52px;
   border-radius: var(--radius-lg);
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -1043,7 +1040,7 @@ onMounted(async () => {
 
 .btn-confirm {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #fff;
+  color: var(--color-white);
   box-shadow: 0 4px 14px var(--color-primary-glow);
 }
 .btn-confirm:hover {
@@ -1055,10 +1052,10 @@ onMounted(async () => {
 .btn-secondary.download-btn {
   flex: none;
   height: 36px;
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   padding: 0 16px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #fff;
+  color: var(--color-white);
   border: none;
   box-shadow: 0 2px 8px var(--color-primary-glow);
 }
@@ -1085,17 +1082,12 @@ onMounted(async () => {
   }
 
   .card-title {
-    font-size: 15px;
+    font-size: var(--text-md);
     line-height: 20px;
   }
 
-  .card-subtitle {
-    font-size: 11px;
-    line-height: 16px;
-  }
-
   .time-group-title {
-    font-size: 12px;
+    font-size: var(--text-sm);
     line-height: 16px;
   }
 
@@ -1133,14 +1125,14 @@ onMounted(async () => {
   .status-badge {
     height: 32px;
     padding: 0 10px;
-    font-size: 11px;
+    font-size: var(--text-xs);
   }
 
   .btn-secondary,
   .check-btn,
   .btn-secondary.download-btn {
     height: 32px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     padding: 0 12px;
   }
 

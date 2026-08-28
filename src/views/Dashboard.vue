@@ -1,5 +1,15 @@
 <template>
   <div class="dashboard-page">
+    <!-- 骨架屏：store.loading=true 期间展示 -->
+    <div v-if="loading" class="skeleton-grid" aria-busy="true" aria-label="加载中">
+      <div class="skeleton skeleton-line short"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-line mid"></div>
+    </div>
+
+    <template v-else>
     <!-- 标题 -->
     <div class="dash-header fade-in-up">
       <h1 class="dash-title">数据仪表盘</h1>
@@ -21,13 +31,13 @@
     <div v-if="showMonthPicker" class="month-picker-overlay" @click.self="showMonthPicker = false">
       <div class="month-picker">
         <div class="picker-header">
-          <button class="picker-btn" @click="decreaseYear">
+          <button class="picker-btn" @click="decreaseYear" aria-label="上一年">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
           <span class="picker-year">{{ pickerYear }}年</span>
-          <button class="picker-btn" @click="increaseYear">
+          <button class="picker-btn" @click="increaseYear" aria-label="下一年">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -53,6 +63,7 @@
       <StatCard label="正常打卡" :value="monthlyStats.normal" unit="天" color="success" />
       <StatCard label="迟到" :value="monthlyStats.late" unit="天" color="warning" :warn="monthlyStats.late > 0" />
       <StatCard label="早退" :value="monthlyStats.early" unit="天" color="danger" :warn="monthlyStats.early > 0" />
+      <StatCard label="累计工时" :value="monthlyStats.totalDuration || '--'" unit="小时" color="primary" />
     </div>
 
     <!-- 月度详情 -->
@@ -65,27 +76,8 @@
         <div class="rate-bar">
           <div class="rate-fill" :style="{ width: monthlyStats.onTimeRate + '%', background: rateColor }"></div>
         </div>
-        <div class="rate-stats">
-          <span class="rate-stat"><span class="stat-num">{{ monthlyStats.normal }}</span> 正常</span>
-          <span class="rate-stat"><span class="stat-num warning">{{ monthlyStats.late }}</span> 迟到</span>
-          <span class="rate-stat"><span class="stat-num danger">{{ monthlyStats.early }}</span> 早退</span>
-        </div>
-      </div>
-      <div class="workhours-card">
-        <div class="workhours-item">
-          <span class="workhours-value">{{ monthlyStats.avgDuration || '--' }}</span>
-          <span class="workhours-label">日均工时</span>
-        </div>
-        <div class="workhours-divider"></div>
-        <div class="workhours-item">
-          <span class="workhours-value">{{ monthlyStats.totalDuration || '--' }}</span>
-          <span class="workhours-label">累计工时</span>
-        </div>
-      </div>
     </div>
-
-    <!-- 近14天工时趋势 -->
-    <TrendChart :records="records" />
+  </div>
 
     <!-- 近7天打卡记录 -->
     <div class="chart-section">
@@ -159,40 +151,7 @@
         <span>暂无打卡记录</span>
       </div>
     </div>
-
-    <!-- 年度概览 -->
-    <div class="year-section">
-      <h2 class="section-title">年度概览（{{ currentYear }}）</h2>
-      <div class="year-stats">
-        <div class="year-stat">
-          <div class="stat-icon primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <span class="year-value">{{ yearlyStats.total }}</span>
-          <span class="year-label">累计打卡天数</span>
-        </div>
-        <div class="year-stat">
-          <div class="stat-icon success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="16 10 10 16 8 14"/>
-            </svg>
-          </div>
-          <span class="year-value">{{ yearlyStats.normal }}</span>
-          <span class="year-label">正常出勤</span>
-        </div>
-        <div class="year-stat">
-          <div class="stat-icon warning">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <span class="year-value">{{ yearlyStats.overtime }}</span>
-          <span class="year-label">加班天数</span>
-        </div>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -201,11 +160,11 @@ import { ref, computed, watch } from 'vue'
 import { useAttendanceStore } from '../stores/attendance'
 import { storeToRefs } from 'pinia'
 import StatCard from '../components/StatCard.vue'
-import TrendChart from '../components/TrendChart.vue'
+import { useEscapeClose } from '../composables/useEscapeClose'
 import { computeStatsFromRecords } from '../utils/attendanceUtils'
 
 const store = useAttendanceStore()
-const { records, yearlyStats } = storeToRefs(store)
+const { records, yearlyStats, loading } = storeToRefs(store)
 
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -215,6 +174,7 @@ const currentMonth = now.getMonth() + 1
 const selectedYear = ref(currentYear)
 const selectedMonth = ref(currentMonth)
 const showMonthPicker = ref(false)
+useEscapeClose(showMonthPicker, () => { showMonthPicker.value = false })
 const pickerYear = ref(currentYear)
 
 // 根据选中的月份计算统计数据
@@ -298,7 +258,7 @@ function increaseYear() {
 }
 
 function decreaseYear() {
-  if (pickerYear.value > 2020) {
+  if (pickerYear.value > currentYear - 1) {
     pickerYear.value--
   }
 }
@@ -322,7 +282,7 @@ function decreaseYear() {
 }
 
 .dash-title {
-  font-size: 24px;
+  font-size: var(--text-2xl-plus);
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
@@ -371,11 +331,11 @@ function decreaseYear() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-bg-mask);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
   animation: fadeIn 0.2s ease;
 }
 
@@ -408,8 +368,10 @@ function decreaseYear() {
 }
 
 .picker-btn {
-  width: 32px;
-  height: 32px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  width: var(--touch-min);
+  height: var(--touch-min);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,7 +393,7 @@ function decreaseYear() {
 }
 
 .picker-year {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -447,7 +409,7 @@ function decreaseYear() {
   border: none;
   background: var(--color-bg-secondary);
   border-radius: 10px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -466,7 +428,7 @@ function decreaseYear() {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 12px;
 }
 
@@ -478,7 +440,7 @@ function decreaseYear() {
 
 .details-grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -506,13 +468,13 @@ function decreaseYear() {
 }
 
 .rate-label {
-  font-size: 13px;
+  font-size: var(--text-base-sm);
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
 .rate-value {
-  font-size: 28px;
+  font-size: var(--text-3xl);
   font-weight: 700;
   letter-spacing: -1px;
 }
@@ -551,7 +513,7 @@ function decreaseYear() {
 }
 
 .rate-stat {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-tertiary);
 }
 
@@ -585,13 +547,13 @@ function decreaseYear() {
 }
 
 .detail-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
 .detail-value {
-  font-size: 20px;
+  font-size: var(--text-xl-plus);
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: -0.5px;
@@ -622,14 +584,14 @@ function decreaseYear() {
 }
 
 .workhours-value {
-  font-size: 20px;
+  font-size: var(--text-xl-plus);
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: -0.5px;
 }
 
 .workhours-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
@@ -656,7 +618,7 @@ function decreaseYear() {
 }
 
 .section-title {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -665,7 +627,7 @@ function decreaseYear() {
 .legend {
   display: flex;
   gap: 16px;
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--color-text-tertiary);
 }
 
@@ -751,7 +713,7 @@ function decreaseYear() {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #D1D5DB;
+  background: var(--color-border-muted);
   transition: all 0.2s;
 }
 
@@ -768,7 +730,7 @@ function decreaseYear() {
 }
 
 .wn-num {
-  font-size: 17px;
+  font-size: var(--text-lg-plus);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
@@ -784,7 +746,7 @@ function decreaseYear() {
 }
 
 .wn-day {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
@@ -884,7 +846,7 @@ function decreaseYear() {
 }
 
 .dd-title {
-  font-size: 17px;
+  font-size: var(--text-lg-plus);
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: 0.2px;
@@ -892,7 +854,7 @@ function decreaseYear() {
 }
 
 .dd-status {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-purple);
   letter-spacing: 0.2px;
@@ -914,7 +876,7 @@ function decreaseYear() {
 }
 
 .dd-time {
-  font-size: 22px;
+  font-size: var(--text-2xl);
   font-weight: 800;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
@@ -929,7 +891,7 @@ function decreaseYear() {
 }
 
 .dd-sub {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-purple);
   letter-spacing: 0.2px;
@@ -947,7 +909,7 @@ function decreaseYear() {
   justify-content: center;
   padding: 16px;
   color: var(--color-text-placeholder);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .year-stats {
@@ -982,7 +944,7 @@ function decreaseYear() {
 }
 
 .year-stat:hover {
-  background: rgba(99, 102, 241, 0.04);
+  background: var(--color-primary-bg-soft);
 }
 
 .stat-icon {
@@ -1006,7 +968,7 @@ function decreaseYear() {
 .stat-icon.warning { background: var(--color-warning); }
 
 .year-value {
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.3px;
@@ -1015,7 +977,7 @@ function decreaseYear() {
 }
 
 .year-label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-tertiary);
   line-height: 14px;
   white-space: nowrap;

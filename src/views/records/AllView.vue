@@ -1,22 +1,28 @@
 <template>
   <div class="all-view">
-    <!-- 头部 -->
+    <!-- 头部（内嵌 2 Tab：近7天 / 全部） -->
     <div class="all-header-card glass-card-strong fade-in-scale" style="animation-delay:0.05s">
-      <span class="all-title">所有打卡记录</span>
+      <div class="all-header-left">
+        <span class="all-title">{{ tabFilter === 'recent' ? '近 7 天记录' : '所有打卡记录' }}</span>
+        <div class="all-tab-switch">
+          <button class="all-tab-btn" :class="{ active: tabFilter === 'recent' }" @click="tabFilter = 'recent'">今日近7天</button>
+          <button class="all-tab-btn" :class="{ active: tabFilter === 'all' }" @click="tabFilter = 'all'">全部</button>
+        </div>
+      </div>
       <div class="all-header-actions">
         <button class="add-record-chip small" @click="$emit('add', null)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>添加</span>
         </button>
-        <button class="export-chip" @click="exportAllToExcel" :disabled="attendanceStore.records.length === 0">
-          <span>导出全部</span>
+        <button class="export-chip" @click="exportAllToExcel" :disabled="displayedRecords.length === 0">
+          <span>{{ tabFilter === 'recent' ? '导出近7天' : '导出全部' }}</span>
         </button>
       </div>
     </div>
 
     <!-- 记录列表 -->
     <div class="all-list glass-card-strong fade-in-scale" style="animation-delay:0.1s">
-      <div class="record-row" v-for="record in sortedRecords" :key="record.date">
+      <div class="record-row" v-for="record in displayedRecords" :key="record.date">
         <div class="record-date-col">
           <span class="record-date">{{ record.date }}</span>
           <span class="record-weekday">{{ getWeekday(record.date) }}</span>
@@ -38,28 +44,53 @@
           <button class="mini-btn delete" @click="$emit('delete', record.date)">删除</button>
         </div>
       </div>
-      <div class="all-empty" v-if="attendanceStore.records.length === 0">
+      <div class="all-empty" v-if="displayedRecords.length === 0">
         <span class="empty-icon">📋</span>
-        <span class="empty-text">暂无打卡记录</span>
+        <span class="empty-text">{{ tabFilter === 'recent' ? '近 7 天暂无打卡记录' : '暂无打卡记录' }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAttendanceStore } from '../../stores/attendance'
 import { getStatusText } from '../../utils/attendanceUtils'
 import { getTodayString } from '../../utils/dateUtils'
-import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS } from '../../utils/exportUtils'
+import { buildExportRows, buildStatsRows, EXPORT_COL_WIDTHS, exportWorkbook } from '../../utils/exportUtils'
 import { createLogger } from '../../utils/logger'
+import { useToast } from '../../composables/useToast'
 
 const log = createLogger('all-records-view')
+const toast = useToast()
 const emit = defineEmits(['add', 'edit', 'delete'])
 const attendanceStore = useAttendanceStore()
+const tabFilter = ref('recent') // 'recent' = 近7天 | 'all' = 全部
 
 const sortedRecords = computed(() => {
   return [...attendanceStore.records].sort((a, b) => b.date.localeCompare(a.date))
+})
+
+/** 近 7 天（包含今天）的日期字符串集合 */
+const recentDateSet = computed(() => {
+  const today = getTodayString()
+  const [y, m, d] = today.split('-').map(Number)
+  const base = new Date(y, m - 1, d)
+  const set = new Set()
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(base)
+    dt.setDate(base.getDate() - i)
+    const yy = dt.getFullYear()
+    const mm = String(dt.getMonth() + 1).padStart(2, '0')
+    const dd = String(dt.getDate()).padStart(2, '0')
+    set.add(`${yy}-${mm}-${dd}`)
+  }
+  return set
+})
+
+const displayedRecords = computed(() => {
+  if (tabFilter.value === 'all') return sortedRecords.value
+  return sortedRecords.value.filter(r => recentDateSet.value.has(r.date))
 })
 
 /** @type {{ value: number, name: string }[]} */
@@ -71,21 +102,19 @@ function getWeekday(dateStr) {
 }
 
 async function exportAllToExcel() {
-  if (attendanceStore.records.length === 0) return
+  if (displayedRecords.value.length === 0) return
+  const filename = `考勤记录_${tabFilter.value === 'recent' ? '近7天' : '全部'}_${getTodayString()}.xlsx`
   try {
-    const XLSX = await import('xlsx')
-    const data = buildExportRows(attendanceStore.records, getWeekday)
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    worksheet['!cols'] = EXPORT_COL_WIDTHS
-    const statsSheet = XLSX.utils.json_to_sheet(buildStatsRows(attendanceStore.records, getWeekday))
-    statsSheet['!cols'] = [{ wch: 12 }, { wch: 24 }]
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '打卡记录')
-    XLSX.utils.book_append_sheet(workbook, statsSheet, '汇总')
-    XLSX.writeFile(workbook, `考勤记录_全部_${getTodayString()}.xlsx`)
+    const data = buildExportRows(displayedRecords.value, getWeekday)
+    const statsRows = buildStatsRows(displayedRecords.value, getWeekday)
+    await exportWorkbook([
+      { name: '打卡记录', rows: data, colWidths: EXPORT_COL_WIDTHS },
+      { name: '汇总', rows: statsRows, colWidths: [{ wch: 12 }, { wch: 24 }] }
+    ], filename)
+    toast.success(`考勤记录已导出：${filename}`)
   } catch (error) {
     log.error('Excel 导出失败:', error)
-    alert('导出失败: ' + (error?.message || '未知错误'))
+    toast.error('导出失败：' + (error?.message || '未知错误'))
   }
 }
 </script>
@@ -102,10 +131,44 @@ async function exportAllToExcel() {
 /* === 头部 === */
 .all-header-card {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  margin: 0 20px; padding: 14px 18px; flex-wrap: nowrap;
+  margin: 0 20px; padding: 14px 18px; flex-wrap: wrap;
 }
-
+.all-header-left {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
 .all-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); flex-shrink: 0; white-space: nowrap; }
+
+.all-tab-switch {
+  display: inline-flex;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+.all-tab-btn {
+  padding: 5px 14px;
+  min-height: var(--touch-min);
+  min-width: 72px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.all-tab-btn:hover { color: var(--color-text-primary); }
+.all-tab-btn.active {
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  font-weight: 600;
+}
 
 .all-header-actions { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
@@ -113,7 +176,7 @@ async function exportAllToExcel() {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; min-height: 28px; min-width: 64px;
   border-radius: 999px; border: none;
-  background: var(--color-primary); color: #fff;
+  background: var(--color-primary); color: var(--color-white);
   font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   cursor: pointer; transition: all var(--transition-fast);
 }
@@ -139,7 +202,7 @@ async function exportAllToExcel() {
   transition: background var(--transition-fast);
 }
 .record-row:last-child { border-bottom: none; }
-.record-row:hover { background: rgba(99, 102, 241, 0.03); }
+.record-row:hover { background: var(--color-primary-bg-tint); }
 
 .record-date-col { display: flex; flex-direction: column; gap: 2px; min-width: 90px; flex-shrink: 0; }
 .record-date    { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
@@ -168,14 +231,23 @@ async function exportAllToExcel() {
 
 .record-actions-col { display: flex; gap: 6px; flex-shrink: 0; }
 .mini-btn {
-  padding: 4px 10px; border-radius: var(--radius-sm);
-  font-size: 11px; font-weight: 500; cursor: pointer; border: none;
+  padding: 4px 12px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
   transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .mini-btn.edit   { background: var(--color-primary-bg); color: var(--color-primary); }
-.mini-btn.edit:hover   { background: var(--color-primary); color: #fff; }
+.mini-btn.edit:hover   { background: var(--color-primary); color: var(--color-white); }
 .mini-btn.delete { background: var(--color-danger-bg);  color: var(--color-danger); }
-.mini-btn.delete:hover { background: var(--color-danger);  color: #fff; }
+.mini-btn.delete:hover { background: var(--color-danger);  color: var(--color-white); }
 
 /* === 空状态 === */
 .all-empty {

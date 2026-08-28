@@ -309,9 +309,9 @@ export function useCloudFiles(cloudStore: CloudStoreApi, toast: ToastApi) {
   }
 }
 
-// ══════════════════════════════════════════
+// ═
 // 工具函数（纯函数，可独立复用）
-// ══════════════════════════════════════════
+// ═
 
 /** 文件类型扩展名映射 */
 const FILE_TYPE_MAP: Record<string, string> = {
