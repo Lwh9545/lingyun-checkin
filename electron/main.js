@@ -38,7 +38,8 @@ const { registerCloudIpcHandlers } = require('./modules/cloud-ipc.js')
 const { createLifecycleManager } = require('./modules/lifecycle.js')
 
 // ==================== Constants ====================
-const APP_VERSION = '2.0.0'
+// 版本单一真相源：package.json（打包后由 app.getVersion() 提供），禁止硬编码
+const APP_VERSION = app.getVersion()
 const WINDOW_READY_DELAY = 2000
 
 // ==================== Global state ====================
