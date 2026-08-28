@@ -306,7 +306,7 @@ onMounted(async () => {
   box-shadow: var(--shadow-card);
 }
 .form-card-label {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
   align-self: center;
@@ -322,7 +322,7 @@ onMounted(async () => {
 .form-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .form-cell-wide { grid-column: span 1; }
 .form-label {
-  font-size: 11px;
+  font-size: var(--text-base-sm);
   font-weight: 500;
   color: var(--color-text-tertiary);
   padding-left: 2px;
@@ -396,7 +396,7 @@ onMounted(async () => {
   box-shadow: var(--shadow-card);
 }
 .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
-.detail-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); }
+.detail-title { font-size: var(--text-md); font-weight: 600; color: var(--color-text-primary); }
 .detail-count { font-size: 12px; color: var(--color-text-tertiary); }
 
 .detail-table { width: 100%; border-collapse: collapse; }

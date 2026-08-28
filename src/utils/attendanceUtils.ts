@@ -167,6 +167,13 @@ export function isInCheckWindow(type: CheckType, config: Partial<AppConfig> = {}
   return currentMinutes >= windowStart
 }
 
+// v2.1：时长简写统一格式（8h / 45m / 8h 15m），全应用唯一入口
+export function formatHoursMinutes(h: number, m: number): string {
+  if (h > 0 && m > 0) return `${h}h ${m}m`
+  if (h > 0) return `${h}h`
+  return `${m}m`
+}
+
 export function calculateEffectiveDuration(checkIn: string, checkOut: string, config: Partial<AppConfig> = {}): string {
   if (!checkIn || !checkOut) return '--'
 
@@ -223,7 +230,8 @@ export function calculateEffectiveDuration(checkIn: string, checkOut: string, co
   if (totalMinutes <= 0) return '--'
   const hours = Math.floor(totalMinutes / TIME.MINUTES_PER_HOUR)
   const minutes = totalMinutes % TIME.MINUTES_PER_HOUR
-  return `${hours}小时${minutes}分钟`
+  // v2.1：统一为 Xh Ym 简写（旧记录中的「X小时Y分钟」由统计解析器兼容）
+  return formatHoursMinutes(hours, minutes)
 }
 
 // ═
@@ -252,6 +260,11 @@ export function computeStatsFromRecords(recs: AttendanceRecord[]): MonthlyStats 
   const overtime = recs.filter(r => r.status === 'overtime').length
   const totalMinutes = recs.reduce((sum, r) => {
     if (!r.duration) return sum
+    // v2.1 兼容两种存储格式：新「2h 30m」与旧「2小时30分钟」；'请假'/'--' 解析为 0 跳过
+    const hm = /^(\d+)h\s*(\d+)?m?$/.exec(r.duration.trim())
+    if (hm) {
+      return sum + (parseInt(hm[1]) || 0) * 60 + (parseInt(hm[2]) || 0)
+    }
     const parts = r.duration.split('小时')
     const h = parseInt(parts[0]) || 0
     const m = parseInt(parts[1]) || 0
@@ -265,11 +278,12 @@ export function computeStatsFromRecords(recs: AttendanceRecord[]): MonthlyStats 
   return {
     total, normal, late, early, overtime,
     onTimeRate: total > 0 ? Math.round((normal / total) * 100) : 0,
+    // v2.1 统一时长格式为 Xh Ym 简写（与财务页 0h 风格一致，避免「小时」竖排换行）
     avgDuration: avgH > 0 || avgM > 0
-      ? `${avgH}小时${avgM}分钟`
-      : '0小时0分钟',
+      ? formatHoursMinutes(avgH, avgM)
+      : '0h',
     totalDuration: totalMinutes > 0
-      ? `${Math.floor(totalMinutes / 60)}小时${totalMinutes % 60}分钟`
-      : '0小时0分钟'
+      ? formatHoursMinutes(Math.floor(totalMinutes / 60), totalMinutes % 60)
+      : '0h'
   }
 }

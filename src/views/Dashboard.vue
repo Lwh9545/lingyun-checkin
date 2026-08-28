@@ -63,7 +63,7 @@
       <StatCard label="正常打卡" :value="monthlyStats.normal" unit="天" color="success" />
       <StatCard label="迟到" :value="monthlyStats.late" unit="天" color="warning" :warn="monthlyStats.late > 0" />
       <StatCard label="早退" :value="monthlyStats.early" unit="天" color="danger" :warn="monthlyStats.early > 0" />
-      <StatCard label="累计工时" :value="monthlyStats.totalDuration || '--'" unit="小时" color="primary" />
+      <StatCard label="累计工时" :value="monthlyStats.totalDuration || '--'" unit="" color="primary" />
     </div>
 
     <!-- 月度详情 -->
@@ -1162,7 +1162,7 @@ function decreaseYear() {
 
 .modal-body { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
 .form-row { display: flex; justify-content: space-between; align-items: center; }
-.form-label { font-size: 14px; color: var(--color-text-secondary); }
+.form-label { font-size: var(--text-base-sm); color: var(--color-text-secondary); }
 .form-input, .form-value {
   font-size: 14px; padding: 8px 12px; border-radius: var(--radius-md);
   border: 1px solid var(--color-border); background: var(--color-border-light);

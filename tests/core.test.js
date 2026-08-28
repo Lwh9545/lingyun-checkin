@@ -134,12 +134,12 @@ describe('calculateEffectiveDuration', () => {
 
   it('标准 9-18 工作日 = 9 小时', () => {
     const result = calculateEffectiveDuration('09:00', '18:00', defaultConfig)
-    expect(result).toBe('9小时0分钟')
+    expect(result).toBe('9h')
   })
 
   it('半天工时', () => {
     const result = calculateEffectiveDuration('09:00', '13:00', defaultConfig)
-    expect(result).toBe('4小时0分钟')
+    expect(result).toBe('4h')
   })
 
   it('无打卡时间返回 --', () => {
@@ -150,13 +150,13 @@ describe('calculateEffectiveDuration', () => {
   it('启用午休扣除', () => {
     const config = { ...defaultConfig, enableRest: true, restStart: '12:00', restEnd: '14:00' }
     const result = calculateEffectiveDuration('09:00', '18:00', config)
-    expect(result).toBe('7小时0分钟')  // 9h - 2h 午休
+    expect(result).toBe('7h')  // 9h - 2h 午休
   })
 
   it('午休部分重叠——只扣除重叠部分', () => {
     const config = { ...defaultConfig, enableRest: true, restStart: '12:00', restEnd: '14:00' }
     const result = calculateEffectiveDuration('09:00', '13:00', config)
-    expect(result).toBe('3小时0分钟')  // 4h - 1h (12:00-13:00 与 12:00-14:00 重叠)
+    expect(result).toBe('3h')  // 4h - 1h (12:00-13:00 与 12:00-14:00 重叠)
   })
 
   it('分段工时——上下午分开', () => {
@@ -167,7 +167,7 @@ describe('calculateEffectiveDuration', () => {
       afternoonStart: '14:00', afternoonEnd: '18:00'
     }
     const result = calculateEffectiveDuration('09:00', '18:00', config)
-    expect(result).toBe('7小时0分钟')  // 3h 上午 + 4h 下午
+    expect(result).toBe('7h')  // 3h 上午 + 4h 下午
   })
 
   it('分段工时——仅上午工作', () => {
@@ -178,7 +178,7 @@ describe('calculateEffectiveDuration', () => {
       afternoonStart: '14:00', afternoonEnd: '18:00'
     }
     const result = calculateEffectiveDuration('09:00', '12:00', config)
-    expect(result).toBe('3小时0分钟')
+    expect(result).toBe('3h')
   })
 
   it('分段工时——超时到下午', () => {
@@ -190,7 +190,7 @@ describe('calculateEffectiveDuration', () => {
     }
     // 09:00-16:00: 上午 3h (09-12) + 下午 2h (14-16) = 5h
     const result = calculateEffectiveDuration('09:00', '16:00', config)
-    expect(result).toBe('5小时0分钟')
+    expect(result).toBe('5h')
   })
 })
 
